@@ -64,6 +64,10 @@ func main() {
 
 	config.LoadDefaults()
 
+	// Config is loaded, now we can set the log level
+	logLevel.Set(config.LogLevel)
+	logger.Info("Log level set", slog.String("level", config.LogLevel.String()))
+
 	if config.GoogleAPIKey != "" {
 		err = activities.SetupYoutubeAPI(config.GoogleAPIKey)
 		if err != nil {
@@ -73,10 +77,6 @@ func main() {
 			logger.Info("YouTube API enabled")
 		}
 	}
-
-	// Config is loaded, now we can set the log level
-	logLevel.Set(config.LogLevel)
-	logger.Info("Log level set", slog.String("level", config.LogLevel.String()))
 
 	discordgo.Logger = func(msgL, _caller int, format string, a ...interface{}) {
 		msg := fmt.Sprintf("[DGO] "+format, a...)
