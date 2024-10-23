@@ -10,11 +10,11 @@ import (
 	"os/signal"
 	"sync"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/guilds"
-	"github.com/UTD-JLA/botsu/internal/users"
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/guilds"
+	"github.com/xoltia/botsu/internal/users"
 )
 
 var dbLocation = flag.String("db", "bot_data.db", "Database file location")

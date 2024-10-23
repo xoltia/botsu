@@ -13,20 +13,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/bot"
-	"github.com/UTD-JLA/botsu/internal/bot/commands"
-	"github.com/UTD-JLA/botsu/internal/goals"
-	"github.com/UTD-JLA/botsu/internal/guilds"
-	"github.com/UTD-JLA/botsu/internal/mediadata"
-	"github.com/UTD-JLA/botsu/internal/users"
-	"github.com/UTD-JLA/botsu/migrations"
 	"github.com/bwmarrin/discordgo"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lmittmann/tint"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/bot"
+	"github.com/xoltia/botsu/internal/bot/commands"
+	"github.com/xoltia/botsu/internal/goals"
+	"github.com/xoltia/botsu/internal/guilds"
+	"github.com/xoltia/botsu/internal/mediadata"
+	"github.com/xoltia/botsu/internal/users"
+	"github.com/xoltia/botsu/migrations"
 )
 
 var (

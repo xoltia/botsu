@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/bot/commands"
+	"github.com/xoltia/botsu/internal/bot/commands"
 )
 
 func TestTimeZone(t *testing.T) {

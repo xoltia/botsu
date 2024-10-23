@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/UTD-JLA/botsu/pkg/otame"
 	"github.com/blugelabs/bluge"
+	"github.com/xoltia/botsu/pkg/otame"
 )
 
 const (

@@ -1,4 +1,4 @@
-# Botsu [![Go](https://github.com/UTD-JLA/botsu/actions/workflows/go.yml/badge.svg)](https://github.com/UTD-JLA/botsu/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/UTD-JLA/botsu)](https://goreportcard.com/report/github.com/UTD-JLA/botsu)
+# Botsu [![Go](https://github.com/xoltia/botsu/actions/workflows/go.yml/badge.svg)](https://github.com/xoltia/botsu/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/xoltia/botsu)](https://goreportcard.com/report/github.com/xoltia/botsu)
 
 Botsu is a Discord bot for logging time spent on immersion activities in Japanese.
 It is the successor to [AnotherImmersionBot](https://github.com/UTD-JLA/another-immersion-bot),
@@ -13,14 +13,14 @@ which itself is an inspiration of TheMoeWay's [ImmersionBot](https://github.com/
 ## Install
 To install the latest release from the terminal, use:
 ```sh
-curl -L https://github.com/UTD-JLA/botsu/releases/latest/download/botsu-linux-amd64 -o ~/.local/bin/botsu
+curl -L https://github.com/xoltia/botsu/releases/latest/download/botsu-linux-amd64 -o ~/.local/bin/botsu
 chmod a+rx ~/.local/bin/botsu
 ```
 replacing `~/.local/bin` with your preferred install location. 
 
 To install from source, use:
 ```
-go install github.com/UTD-JLA/botsu/cmd/botsu@latest
+go install github.com/xoltia/botsu/cmd/botsu@latest
 ```
 which will install to your `GOBIN` (`~/go/bin` by default).
 

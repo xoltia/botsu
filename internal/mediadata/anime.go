@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/UTD-JLA/botsu/pkg/otame"
 	"github.com/blugelabs/bluge"
+	"github.com/xoltia/botsu/pkg/otame"
 )
 
 const (

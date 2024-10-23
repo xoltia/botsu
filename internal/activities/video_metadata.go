@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/UTD-JLA/botsu/pkg/ytchannel"
 	"github.com/kkdai/youtube/v2"
 	"github.com/wader/goutubedl"
+	"github.com/xoltia/botsu/pkg/ytchannel"
 )
 
 var ytClient = youtube.Client{}

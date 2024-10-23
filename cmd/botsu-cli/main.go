@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/pkg/ref"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/pkg/ref"
 )
 
 var (

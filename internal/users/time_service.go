@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/guilds"
 	"github.com/jackc/pgx/v5"
+	"github.com/xoltia/botsu/internal/guilds"
 )
 
 type UserTimeService struct {

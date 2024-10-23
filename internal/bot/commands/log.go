@@ -14,17 +14,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/bot"
-	"github.com/UTD-JLA/botsu/internal/goals"
-	"github.com/UTD-JLA/botsu/internal/guilds"
-	"github.com/UTD-JLA/botsu/internal/mediadata"
-	"github.com/UTD-JLA/botsu/internal/users"
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
-	"github.com/UTD-JLA/botsu/pkg/ref"
 	"github.com/bwmarrin/discordgo"
 	"github.com/esimov/stackblur-go"
 	"github.com/kkdai/youtube/v2"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/bot"
+	"github.com/xoltia/botsu/internal/goals"
+	"github.com/xoltia/botsu/internal/guilds"
+	"github.com/xoltia/botsu/internal/mediadata"
+	"github.com/xoltia/botsu/internal/users"
+	"github.com/xoltia/botsu/pkg/discordutil"
+	"github.com/xoltia/botsu/pkg/ref"
 )
 
 var (

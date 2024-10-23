@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
 	"github.com/stretchr/testify/assert"
+	"github.com/xoltia/botsu/internal/activities"
 )
 
 func TestGetVideoDataWithYtdlp(t *testing.T) {

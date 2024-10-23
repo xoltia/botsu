@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/bot"
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
 	"github.com/bwmarrin/discordgo"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/bot"
+	"github.com/xoltia/botsu/pkg/discordutil"
 )
 
 var ExportCommandData = &discordgo.ApplicationCommand{

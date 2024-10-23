@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/bot"
-	"github.com/UTD-JLA/botsu/internal/goals"
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
 	"github.com/adhocore/gronx"
 	"github.com/bwmarrin/discordgo"
 	"github.com/jackc/pgx/v5"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/bot"
+	"github.com/xoltia/botsu/internal/goals"
+	"github.com/xoltia/botsu/pkg/discordutil"
 )
 
 var GoalCommandData = &discordgo.ApplicationCommand{

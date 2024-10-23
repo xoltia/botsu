@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/bot"
-	activitiesPub "github.com/UTD-JLA/botsu/pkg/activities"
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
 	"github.com/bwmarrin/discordgo"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/bot"
+	activitiesPub "github.com/xoltia/botsu/pkg/activities"
+	"github.com/xoltia/botsu/pkg/discordutil"
 )
 
 var ImportCommandData = &discordgo.ApplicationCommand{

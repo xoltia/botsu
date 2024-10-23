@@ -3,11 +3,11 @@ package commands
 import (
 	"strings"
 
-	"github.com/UTD-JLA/botsu/internal/bot"
-	"github.com/UTD-JLA/botsu/internal/guilds"
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
-	"github.com/UTD-JLA/botsu/pkg/ref"
 	"github.com/bwmarrin/discordgo"
+	"github.com/xoltia/botsu/internal/bot"
+	"github.com/xoltia/botsu/internal/guilds"
+	"github.com/xoltia/botsu/pkg/discordutil"
+	"github.com/xoltia/botsu/pkg/ref"
 )
 
 var GuildConfigCommandData = &discordgo.ApplicationCommand{

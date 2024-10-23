@@ -3,7 +3,7 @@ package orderedmap_test
 import (
 	"testing"
 
-	"github.com/UTD-JLA/botsu/pkg/orderedmap"
+	"github.com/xoltia/botsu/pkg/orderedmap"
 )
 
 func TestOrderedMap(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/UTD-JLA/botsu/pkg/activities"
+	"github.com/xoltia/botsu/pkg/activities"
 )
 
 var path = flag.String("path", "", "path to export file")

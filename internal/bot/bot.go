@@ -6,9 +6,9 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"github.com/UTD-JLA/botsu/internal/guilds"
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
 	"github.com/bwmarrin/discordgo"
+	"github.com/xoltia/botsu/internal/guilds"
+	"github.com/xoltia/botsu/pkg/discordutil"
 )
 
 var unexpectedErrorMessage = &discordgo.WebhookParams{

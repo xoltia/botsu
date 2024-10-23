@@ -4,8 +4,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
 	"github.com/adhocore/gronx"
+	"github.com/xoltia/botsu/internal/activities"
 )
 
 type Goal struct {

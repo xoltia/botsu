@@ -3,10 +3,10 @@ package discordutil_test
 import (
 	"testing"
 
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
-	"github.com/UTD-JLA/botsu/pkg/ref"
 	"github.com/bwmarrin/discordgo"
 	"github.com/stretchr/testify/assert"
+	"github.com/xoltia/botsu/pkg/discordutil"
+	"github.com/xoltia/botsu/pkg/ref"
 )
 
 func TestUnmarshalOptions(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/UTD-JLA/botsu/pkg/orderedmap"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/xoltia/botsu/pkg/orderedmap"
 )
 
 type MemberStats struct {

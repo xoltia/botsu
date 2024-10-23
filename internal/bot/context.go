@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
 	"github.com/bwmarrin/discordgo"
+	"github.com/xoltia/botsu/pkg/discordutil"
 )
 
 var ErrResponseNotSent = errors.New("response not yet sent")

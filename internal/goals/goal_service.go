@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/users"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/users"
 )
 
 type GoalService struct {

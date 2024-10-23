@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
-	internal "github.com/UTD-JLA/botsu/internal/activities"
+	internal "github.com/xoltia/botsu/internal/activities"
 )
 
 type Activity = internal.Activity

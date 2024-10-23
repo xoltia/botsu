@@ -1,4 +1,4 @@
-module github.com/UTD-JLA/botsu
+module github.com/xoltia/botsu
 
 go 1.21
 

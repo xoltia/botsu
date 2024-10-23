@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/UTD-JLA/botsu/pkg/ytchannel"
 	"github.com/stretchr/testify/assert"
+	"github.com/xoltia/botsu/pkg/ytchannel"
 )
 
 func TestGetChannelFromHandle(t *testing.T) {

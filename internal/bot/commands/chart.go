@@ -14,15 +14,15 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/UTD-JLA/botsu/internal/activities"
-	"github.com/UTD-JLA/botsu/internal/bot"
-	"github.com/UTD-JLA/botsu/internal/guilds"
-	"github.com/UTD-JLA/botsu/internal/users"
-	"github.com/UTD-JLA/botsu/pkg/discordutil"
-	"github.com/UTD-JLA/botsu/pkg/orderedmap"
 	"github.com/bwmarrin/discordgo"
 	"github.com/golang-module/carbon/v2"
 	"github.com/jackc/pgx/v5"
+	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/bot"
+	"github.com/xoltia/botsu/internal/guilds"
+	"github.com/xoltia/botsu/internal/users"
+	"github.com/xoltia/botsu/pkg/discordutil"
+	"github.com/xoltia/botsu/pkg/orderedmap"
 )
 
 var ChartCommandData = &discordgo.ApplicationCommand{
