@@ -26,6 +26,11 @@ type ImportInfo struct {
 	Count     int
 }
 
+type ChannelStats struct {
+	ChannelName   string
+	TotalDuration time.Duration
+}
+
 type ActivityRepository struct {
 	pool *pgxpool.Pool
 }
@@ -177,25 +182,86 @@ func (r *ActivityRepository) GetRecentImportsByUserID(
 	return importHistory, nil
 }
 
-func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
+func (r *ActivityRepository) GetTotalYouTubeWatchTimeByUserID(
 	ctx context.Context,
 	userID string,
 	start, end time.Time,
-) (orderedmap.Map[time.Duration], error) {
+) (time.Duration, error) {
+	conn, err := r.pool.Acquire(ctx)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer conn.Release()
+
 	const query = `
-		SELECT
-			COALESCE(SUM(duration), 0) AS total_duration,
-			meta->>'channel_handle' AS channel_handle
+		SELECT COALESCE(SUM(duration), 0)
 		FROM activities
 		WHERE user_id = $1
 		AND media_type = 'video'
 		AND meta->>'platform' = 'youtube'
-		AND meta->>'channel_handle' IS NOT NULL
+		AND deleted_at IS NULL
+		AND date >= $2
+		AND date <= $3
+	`
+
+	row := conn.QueryRow(ctx, query, userID, start, end)
+	var total time.Duration
+	err = row.Scan(&total)
+	return total, err
+}
+
+func (r *ActivityRepository) GetLatestVideoChannelNameByUserIDAndChannelID(
+	ctx context.Context,
+	userID, channelID string,
+) (string, error) {
+	conn, err := r.pool.Acquire(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	defer conn.Release()
+
+	const query = `
+		SELECT meta->>'channel_name'
+		FROM activities
+		WHERE user_id = $1
+		AND media_type = 'video'
+		AND meta->>'channel_name' IS NOT NULL
+		AND meta->>'channel_id' = $2
+		AND meta->>'platform' = 'youtube'
+		AND deleted_at IS NULL
+		ORDER BY date DESC
+		LIMIT 1
+	`
+
+	var channelName string
+	err = conn.QueryRow(ctx, query, userID, channelID).Scan(&channelName)
+	return channelName, err
+}
+
+func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
+	ctx context.Context,
+	userID string,
+	start, end time.Time,
+	limit int,
+) (orderedmap.Map[ChannelStats], error) {
+	const query = `
+		SELECT
+			COALESCE(SUM(duration), 0) AS total_duration,
+			meta->>'channel_id' AS channel_id
+		FROM activities
+		WHERE user_id = $1
+		AND media_type = 'video'
+		AND meta->>'platform' = 'youtube'
+		AND meta->>'channel_id' IS NOT NULL
 		AND date >= $2
 		AND date <= $3
 		AND deleted_at IS NULL
-		GROUP BY meta->>'channel_handle'
+		GROUP BY meta->>'channel_id'
 		ORDER BY total_duration DESC
+		LIMIT $4
 	`
 
 	conn, err := r.pool.Acquire(ctx)
@@ -206,7 +272,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
 
 	defer conn.Release()
 
-	rows, err := conn.Query(ctx, query, userID, start, end)
+	rows, err := conn.Query(ctx, query, userID, start, end, limit)
 
 	if err != nil {
 		return nil, err
@@ -214,17 +280,25 @@ func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
 
 	defer rows.Close()
 
-	channels := orderedmap.New[time.Duration]()
+	channels := orderedmap.New[ChannelStats]()
 
 	for rows.Next() {
-		var channel string
+		var channelID string
 		var duration time.Duration
 
-		if err := rows.Scan(&duration, &channel); err != nil {
+		if err := rows.Scan(&duration, &channelID); err != nil {
 			return nil, err
 		}
 
-		channels.Set(channel, duration)
+		channelName, err := r.GetLatestVideoChannelNameByUserIDAndChannelID(ctx, userID, channelID)
+		if err != nil {
+			return nil, err
+		}
+
+		channels.Set(channelID, ChannelStats{
+			ChannelName:   channelName,
+			TotalDuration: duration,
+		})
 	}
 
 	return channels, nil

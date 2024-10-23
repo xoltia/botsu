@@ -51,20 +51,28 @@ func main() {
 	slog.SetDefault(logger)
 
 	err := config.Load(*configPath)
-
 	if err != nil && !os.IsNotExist(err) {
 		logger.Error("Unable to load config", slog.String("err", err.Error()), slog.String("path", *configPath))
 		os.Exit(1)
 	}
 
 	err = config.LoadEnv()
-
 	if err != nil {
 		logger.Error("Unable to load config from env", slog.String("err", err.Error()))
 		os.Exit(1)
 	}
 
 	config.LoadDefaults()
+
+	if config.GoogleAPIKey != "" {
+		err = activities.SetupYoutubeAPI(config.GoogleAPIKey)
+		if err != nil {
+			logger.Error("Unable to setup YouTube API", slog.String("err", err.Error()))
+			os.Exit(1)
+		} else {
+			logger.Info("YouTube API enabled")
+		}
+	}
 
 	// Config is loaded, now we can set the log level
 	logLevel.Set(config.LogLevel)

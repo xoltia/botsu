@@ -19,6 +19,7 @@ type Config struct {
 	LogLevel           slog.Level     `toml:"log_level"`
 	NoPanic            bool           `toml:"no_panic"`
 	DataUpdateInterval time.Duration  `toml:"data_update_interval"`
+	GoogleAPIKey       string         `toml:"google_api_key"`
 }
 
 type DatabaseConfig struct {
@@ -182,6 +183,11 @@ func (c *Config) LoadEnv() error {
 		}
 
 		c.DataUpdateInterval = duration
+	}
+
+	googleAPIKey, ok := os.LookupEnv("BOTSU_GOOGLE_API_KEY")
+	if ok {
+		c.GoogleAPIKey = googleAPIKey
 	}
 
 	return nil

@@ -2,9 +2,11 @@ package activities
 
 import (
 	"context"
+	"errors"
 	"log/slog"
-	nurl "net/url"
+	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -12,20 +14,34 @@ import (
 	"github.com/kkdai/youtube/v2"
 	"github.com/wader/goutubedl"
 	"github.com/xoltia/botsu/pkg/ytchannel"
+	"google.golang.org/api/option"
+	youtubeAPI "google.golang.org/api/youtube/v3"
 )
 
+// TODO: Move this to a separate package
+
 var ytClient = youtube.Client{}
+var ytAPIService *youtubeAPI.Service
+var channelCache = sync.Map{}
 
 // video is either youtube.com/watch?v=ID or youtube.com/live/ID (for live streams) or youtu.be/ID
-var ytVideoLinkRegex = regexp.MustCompile(`(?:youtube\.com/watch\?v=|youtube\.com/live/|youtu\.be/)([a-zA-Z0-9_-]+)`)
-var ytHandleRegex = regexp.MustCompile(`(^|\s|youtu.*/)@([a-zA-Z0-9_-]+)($|\s)`)
-var hashTagRegex = regexp.MustCompile(`#([^#\s\x{3000}]+)`)
+var (
+	ytVideoLinkRegex = regexp.MustCompile(`(?:youtube\.com/watch\?v=|youtube\.com/live/|youtu\.be/)([a-zA-Z0-9_-]+)`)
+	ytHandleRegex    = regexp.MustCompile(`(^|\s|youtu.*/)@([a-zA-Z0-9_-]+)($|\s)`)
+	hashTagRegex     = regexp.MustCompile(`#([^#\s\x{3000}]+)`)
+)
 
-var channelCache = sync.Map{}
+var ErrVideoNotFound = errors.New("video not found")
 
 func init() {
 	youtube.DefaultClient = youtube.WebClient
 	goutubedl.Path = "yt-dlp"
+}
+
+func SetupYoutubeAPI(apiKey string) error {
+	var err error
+	ytAPIService, err = youtubeAPI.NewService(context.Background(), option.WithAPIKey(apiKey))
+	return err
 }
 
 type VideoInfo struct {
@@ -36,18 +52,18 @@ type VideoInfo struct {
 	Duration       time.Duration `json:"video_duration"`
 	ChannelID      string        `json:"channel_id"`
 	ChannelName    string        `json:"channel_name"`
-	ChannelHandle  string        `json:"channel_handle"`
+	ChannelHandle  string        `json:"channel_handle,omitempty"`
 	Thumbnail      string        `json:"thumbnail"`
 	LinkedChannels []string      `json:"linked_channels,omitempty"`
 	LinkedVideos   []string      `json:"linked_videos,omitempty"`
 	HashTags       []string      `json:"hashtags,omitempty"`
 }
 
-func GetVideoInfo(ctx context.Context, url *nurl.URL, forceYtdlp bool) (v *VideoInfo, err error) {
-	isYoutubeLink := url.Host == "youtu.be" ||
-		url.Host == "youtube.com" ||
-		url.Host == "www.youtube.com" ||
-		url.Host == "m.youtube.com"
+func GetVideoInfo(ctx context.Context, videoURL *url.URL, forceYtdlp bool) (v *VideoInfo, err error) {
+	isYoutubeLink := videoURL.Host == "youtu.be" ||
+		videoURL.Host == "youtube.com" ||
+		videoURL.Host == "www.youtube.com" ||
+		videoURL.Host == "m.youtube.com"
 
 	logger, ok := ctx.Value("logger").(*slog.Logger)
 
@@ -57,33 +73,33 @@ func GetVideoInfo(ctx context.Context, url *nurl.URL, forceYtdlp bool) (v *Video
 
 	logger.Debug(
 		"Getting video info",
-		slog.String("url", url.String()),
+		slog.String("url", videoURL.String()),
 		slog.Bool("is_youtube_link", isYoutubeLink),
 		slog.Bool("force_ytdlp", forceYtdlp),
-		slog.String("host", url.Host),
+		slog.String("host", videoURL.Host),
 	)
 
 	if !forceYtdlp && isYoutubeLink {
-		v, err = getInfoFromYoutube(ctx, url)
+		v, err = getInfoFromYoutube(ctx, videoURL)
 
 		if err != nil {
 			logger.Warn(
 				"Failed to get video info from youtube, falling back to yt-dlp",
-				slog.String("url", url.String()),
+				slog.String("url", videoURL.String()),
 				slog.String("error", err.Error()),
 			)
 
-			v, err = getGenericVideoInfo(ctx, url)
+			v, err = getGenericVideoInfo(ctx, videoURL)
 		}
 
 		return
 	}
 
-	return getGenericVideoInfo(ctx, url)
+	return getGenericVideoInfo(ctx, videoURL)
 }
 
-func getGenericVideoInfo(ctx context.Context, url *nurl.URL) (v *VideoInfo, err error) {
-	result, err := goutubedl.New(ctx, url.String(), goutubedl.Options{
+func getGenericVideoInfo(ctx context.Context, videoURL *url.URL) (v *VideoInfo, err error) {
+	result, err := goutubedl.New(ctx, videoURL.String(), goutubedl.Options{
 		Type: goutubedl.TypeSingle,
 	})
 
@@ -94,7 +110,7 @@ func getGenericVideoInfo(ctx context.Context, url *nurl.URL) (v *VideoInfo, err 
 	info := result.Info
 
 	v = &VideoInfo{
-		URL:           url.String(),
+		URL:           videoURL.String(),
 		Platform:      info.Extractor,
 		ID:            info.ID,
 		Title:         info.Title,
@@ -112,14 +128,100 @@ func getGenericVideoInfo(ctx context.Context, url *nurl.URL) (v *VideoInfo, err 
 	return
 }
 
-func getInfoFromYoutube(ctx context.Context, url *nurl.URL) (v *VideoInfo, err error) {
-	var video *youtube.Video
+// Format: PT#D#H#M#S
+func parseYouTubeAPITime(duration string) time.Duration {
+	if !strings.HasPrefix(duration, "PT") {
+		return 0
+	}
 
-	if strings.HasPrefix(strings.ToLower(url.Path), "/live/") {
-		parts := strings.Split(url.Path, "/")
+	duration = duration[2:]
+	components := []struct {
+		unit       string
+		multiplier time.Duration
+	}{
+		{"H", time.Hour},
+		{"M", time.Minute},
+		{"S", time.Second},
+	}
+
+	var total time.Duration
+	for _, component := range components {
+		index := strings.Index(duration, component.unit)
+		if index == -1 {
+			continue
+		}
+
+		value, _ := strconv.Atoi(duration[:index])
+		total += time.Duration(value) * component.multiplier
+		duration = duration[index+1:]
+	}
+
+	return total
+	// days := strings.Index(duration, "D")
+	// hours := strings.Index(duration, "H")
+	// minutes := strings.Index(duration, "M")
+	// seconds := strings.Index(duration, "S")
+
+	// var d, h, m, s int
+	// if days != -1 {
+	// 	d, _ = strconv.Atoi(duration[:days])
+	// }
+	// if hours != -1 {
+	// 	h, _ = strconv.Atoi(duration[days+1 : hours])
+	// }
+	// if minutes != -1 {
+	// 	m, _ = strconv.Atoi(duration[hours+1 : minutes])
+	// }
+	// if seconds != -1 {
+	// 	s, _ = strconv.Atoi(duration[minutes+1 : seconds])
+	// }
+	// return time.Duration(d*24*60*60+h*60*60+m*60+s) * time.Second
+}
+
+func getInfoFromYoutube(ctx context.Context, videoURL *url.URL) (v *VideoInfo, err error) {
+	if ytAPIService != nil {
+		var result *youtubeAPI.VideoListResponse
+
+		parts := ytVideoLinkRegex.FindStringSubmatch(videoURL.String())
+		if len(parts) < 2 {
+			err = errors.New("invalid youtube video URL")
+			return
+		}
+
+		result, err = ytAPIService.Videos.
+			List([]string{"snippet", "contentDetails"}).
+			Id(parts[1]).
+			Do()
+
+		if err != nil {
+			return
+		}
+
+		if len(result.Items) == 0 {
+			err = ErrVideoNotFound
+			return
+		}
+
+		v = &VideoInfo{
+			URL:         videoURL.String(),
+			Platform:    "youtube",
+			ID:          result.Items[0].Id,
+			Title:       result.Items[0].Snippet.Title,
+			ChannelID:   result.Items[0].Snippet.ChannelId,
+			ChannelName: result.Items[0].Snippet.ChannelTitle,
+			Thumbnail:   result.Items[0].Snippet.Thumbnails.Maxres.Url,
+			Duration:    parseYouTubeAPITime(result.Items[0].ContentDetails.Duration),
+			//ChannelHandle: result.Items[0].Snippet.ChannelTitle,
+		}
+		return
+	}
+
+	var video *youtube.Video
+	if strings.HasPrefix(strings.ToLower(videoURL.Path), "/live/") {
+		parts := strings.Split(videoURL.Path, "/")
 		video, err = ytClient.GetVideoContext(ctx, parts[len(parts)-1])
 	} else {
-		video, err = ytClient.GetVideoContext(ctx, url.String())
+		video, err = ytClient.GetVideoContext(ctx, videoURL.String())
 	}
 
 	if err != nil {
@@ -133,7 +235,7 @@ func getInfoFromYoutube(ctx context.Context, url *nurl.URL) (v *VideoInfo, err e
 	}
 
 	v = &VideoInfo{
-		URL:           url.String(),
+		URL:           videoURL.String(),
 		Platform:      "youtube",
 		ID:            video.ID,
 		Title:         video.Title,

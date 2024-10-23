@@ -183,33 +183,45 @@ func getQuickChartChannelPieBody(labels []string, values []float64) (*bytes.Buff
 }
 
 func (c *ChartCommand) handleYoutubeChannel(ctx *bot.InteractionContext, user *users.User, start, end carbon.Carbon, chartType string) error {
-	channels, err := c.ar.GetTotalByUserIDGroupByVideoChannel(ctx.ResponseContext(), user.ID, start.ToStdTime(), end.ToStdTime())
+	channels, err := c.ar.GetTotalByUserIDGroupByVideoChannel(
+		ctx.ResponseContext(),
+		user.ID,
+		start.ToStdTime(),
+		end.ToStdTime(),
+		9,
+	)
 
 	if err != nil {
 		return err
 	}
 
-	totalMinutes := 0.0
+	totalTime, err := c.ar.GetTotalYouTubeWatchTimeByUserID(
+		ctx.ResponseContext(),
+		user.ID,
+		start.ToStdTime(),
+		end.ToStdTime(),
+	)
+	if err != nil {
+		return err
+	}
 
+	totalMinutes := totalTime.Minutes()
 	maxKeys := min(9, channels.Len())
-
 	keys := make([]string, 0, maxKeys)
 	values := make([]float64, 0, maxKeys)
+	totalDisplayed := 0.0
+	for i := 0; i < maxKeys; i++ {
+		v, _ := channels.Get(channels.Keys()[i])
+		k := v.ChannelName
 
-	for i := 0; i < channels.Len(); i++ {
-		k := channels.Keys()[i]
-		v, _ := channels.Get(k)
-		totalMinutes += v.Minutes()
+		keys = append(keys, k)
+		values = append(values, v.TotalDuration.Minutes())
+		totalDisplayed += v.TotalDuration.Minutes()
+	}
 
-		if i == maxKeys {
-			keys = append(keys, "Other")
-			values = append(values, 0)
-		} else if i > maxKeys {
-			values[maxKeys] += v.Minutes()
-		} else {
-			keys = append(keys, k)
-			values = append(values, v.Minutes())
-		}
+	if len(keys) == 9 {
+		keys = append(keys, "Other")
+		values = append(values, totalMinutes-totalDisplayed)
 	}
 
 	for i, v := range values {
@@ -253,7 +265,8 @@ func (c *ChartCommand) handleYoutubeChannel(ctx *bot.InteractionContext, user *u
 		"Here are your top channels from <t:%d> to <t:%d> . You logged a total of **%.0f minutes**. Here is a breakdown of your time:",
 		start.Timestamp(),
 		end.Timestamp(),
-		totalMinutes)
+		totalMinutes,
+	)
 
 	embed := discordutil.NewEmbedBuilder().
 		SetTitle("Top YouTube Channels").
@@ -262,7 +275,7 @@ func (c *ChartCommand) handleYoutubeChannel(ctx *bot.InteractionContext, user *u
 		SetImage("attachment://chart.png")
 
 	for i := 0; i < maxKeys; i++ {
-		channelURL := fmt.Sprintf("https://www.youtube.com/%s", keys[i])
+		channelURL := fmt.Sprintf("https://www.youtube.com/channel/%s", channels.Keys()[i])
 		percent := values[i] / totalMinutes * 100
 		fieldTitle := fmt.Sprintf("%.0f minutes (%.0f%%)", values[i], percent)
 		fieldValue := fmt.Sprintf("[%s](%s)", keys[i], channelURL)

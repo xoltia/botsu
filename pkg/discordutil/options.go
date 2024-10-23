@@ -294,7 +294,7 @@ func UnmarshalOptions(options []*discordgo.ApplicationCommandInteractionDataOpti
 				required = true
 			}
 		}
-		option := GetOption(options, tag)
+		option := GetOption(options, name)
 		if option == nil {
 			if required {
 				return fmt.Errorf("UnmarshalOptions: required option not found: %s", name)

@@ -35,6 +35,7 @@ type Activity struct {
 func NewActivity() *Activity {
 	return &Activity{
 		Meta: make(map[string]interface{}),
+		Date: time.Now(),
 	}
 }
 
