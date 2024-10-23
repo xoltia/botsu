@@ -224,7 +224,7 @@ func (r *ActivityRepository) GetLatestVideoChannelNameByUserIDAndChannelID(
 	defer conn.Release()
 
 	const query = `
-		SELECT meta->>'channel_name'
+		SELECT COALESCE(meta->>'channel_name', 'Unknown Channel')
 		FROM activities
 		WHERE user_id = $1
 		AND media_type = 'video'
