@@ -16,7 +16,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/esimov/stackblur-go"
-	"github.com/kkdai/youtube/v2"
 	"github.com/xoltia/botsu/internal/activities"
 	"github.com/xoltia/botsu/internal/bot"
 	"github.com/xoltia/botsu/internal/goals"
@@ -300,7 +299,6 @@ type LogCommand struct {
 	mediaSearcher *mediadata.MediaSearcher
 	goalService   *goals.GoalService
 	timeService   *users.UserTimeService
-	ytClient      youtube.Client
 }
 
 func NewLogCommand(
@@ -318,7 +316,6 @@ func NewLogCommand(
 		guildRepo:     gr,
 		goalService:   gs,
 		timeService:   ts,
-		ytClient:      youtube.Client{},
 	}
 }
 

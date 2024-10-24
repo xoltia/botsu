@@ -174,15 +174,6 @@ func (r *GoalRepository) UpdateTx(ctx context.Context, tx pgx.Tx, g *Goal) (err 
 }
 
 func (r *GoalRepository) DeleteByID(ctx context.Context, id int64) (err error) {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return
-	}
-
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx, "UPDATE GOALS SET deleted_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $1", id)
-
+	_, err = r.pool.Exec(ctx, "UPDATE GOALS SET deleted_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $1", id)
 	return
 }

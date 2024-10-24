@@ -19,15 +19,7 @@ func NewGuildRepository(pool *pgxpool.Pool) *GuildRepository {
 }
 
 func (r *GuildRepository) Create(ctx context.Context, guild *Guild) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
-	err = conn.QueryRow(
+	err := r.pool.QueryRow(
 		ctx,
 		`INSERT INTO guilds (id, timezone)
 			VALUES ($1, $2)
@@ -47,22 +39,11 @@ func (r *GuildRepository) Create(ctx context.Context, guild *Guild) error {
 
 func (r *GuildRepository) FindByID(ctx context.Context, id string) (*Guild, error) {
 	entry, ok := r.cache.Load(id)
-
 	if ok {
 		return entry.(*Guild), nil
 	}
-
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
 	var guild Guild
-
-	err = conn.QueryRow(ctx,
+	err := r.pool.QueryRow(ctx,
 		`SELECT id, timezone
 		FROM guilds
 		WHERE id = $1;`,
@@ -102,26 +83,16 @@ func (r *GuildRepository) FindOrCreate(ctx context.Context, id string) (*Guild, 
 }
 
 func (r *GuildRepository) SetGuildTimezone(ctx context.Context, guildID, timezone string) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx,
+	_, err := r.pool.Exec(ctx,
 		`UPDATE guilds
 		SET timezone = $2
 		WHERE id = $1;`,
 		guildID, timezone)
-
 	if err != nil {
 		return err
 	}
 
 	entry, ok := r.cache.Load(guildID)
-
 	if ok {
 		guild := entry.(*Guild)
 		guild.Timezone = &timezone
@@ -131,15 +102,7 @@ func (r *GuildRepository) SetGuildTimezone(ctx context.Context, guildID, timezon
 }
 
 func (r *GuildRepository) RemoveMembers(ctx context.Context, guildID string, userID []string) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx,
+	_, err := r.pool.Exec(ctx,
 		`DELETE FROM guild_members
 		WHERE guild_id = $1
 		AND user_id = ANY($2);`,

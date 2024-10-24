@@ -40,15 +40,7 @@ func NewActivityRepository(pool *pgxpool.Pool) *ActivityRepository {
 }
 
 func (r *ActivityRepository) Create(ctx context.Context, activity *Activity) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
-	err = conn.QueryRow(
+	err := r.pool.QueryRow(
 		ctx,
 		`INSERT INTO activities (user_id, guild_id, name, primary_type, media_type, duration, date, meta)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -67,14 +59,6 @@ func (r *ActivityRepository) Create(ctx context.Context, activity *Activity) err
 }
 
 func (r *ActivityRepository) ImportMany(ctx context.Context, as []*Activity) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
 	columnNames := []string{
 		"user_id",
 		"guild_id",
@@ -108,8 +92,7 @@ func (r *ActivityRepository) ImportMany(ctx context.Context, as []*Activity) err
 		}
 	}
 
-	_, err = conn.CopyFrom(ctx, pgx.Identifier{"activities"}, columnNames, pgx.CopyFromRows(rows))
-
+	_, err := r.pool.CopyFrom(ctx, pgx.Identifier{"activities"}, columnNames, pgx.CopyFromRows(rows))
 	return err
 }
 
@@ -118,15 +101,7 @@ func (r *ActivityRepository) UndoImportByUserIDAndTimestamp(
 	userID string,
 	timestamp time.Time,
 ) (int64, error) {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return 0, err
-	}
-
-	defer conn.Release()
-
-	const sql = `
+	query := `
 		UPDATE activities
 		SET deleted_at = NOW() AT TIME ZONE 'UTC'
 		WHERE user_id = $1
@@ -134,7 +109,7 @@ func (r *ActivityRepository) UndoImportByUserIDAndTimestamp(
 		AND deleted_at IS NULL
 	`
 
-	tag, err := conn.Exec(ctx, sql, userID, timestamp)
+	tag, err := r.pool.Exec(ctx, query, userID, timestamp)
 	return tag.RowsAffected(), err
 }
 
@@ -143,15 +118,7 @@ func (r *ActivityRepository) GetRecentImportsByUserID(
 	userID string,
 	limit int,
 ) ([]ImportInfo, error) {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
-	const query = `
+	query := `
 		SELECT imported_at, COUNT(*) as count
 		FROM activities
 		WHERE user_id = $1
@@ -161,9 +128,7 @@ func (r *ActivityRepository) GetRecentImportsByUserID(
 		ORDER BY imported_at DESC
 		LIMIT $2
 	`
-
-	rows, err := conn.Query(ctx, query, userID, limit)
-
+	rows, err := r.pool.Query(ctx, query, userID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -187,15 +152,7 @@ func (r *ActivityRepository) GetTotalYouTubeWatchTimeByUserID(
 	userID string,
 	start, end time.Time,
 ) (time.Duration, error) {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return 0, err
-	}
-
-	defer conn.Release()
-
-	const query = `
+	query := `
 		SELECT COALESCE(SUM(duration), 0)
 		FROM activities
 		WHERE user_id = $1
@@ -206,25 +163,19 @@ func (r *ActivityRepository) GetTotalYouTubeWatchTimeByUserID(
 		AND date <= $3
 	`
 
-	row := conn.QueryRow(ctx, query, userID, start, end)
+	row := r.pool.QueryRow(ctx, query, userID, start, end)
 	var total time.Duration
-	err = row.Scan(&total)
+	err := row.Scan(&total)
 	return total, err
 }
 
-func (r *ActivityRepository) GetLatestVideoChannelNameByUserIDAndChannelID(
+func (r *ActivityRepository) GetLatestYouTubeChannelNamesByUserIDAndChannelID(
 	ctx context.Context,
-	userID, channelID string,
-) (string, error) {
-	conn, err := r.pool.Acquire(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	defer conn.Release()
-
-	const query = `
-		SELECT COALESCE(meta->>'channel_name', 'Unknown Channel')
+	userID string,
+	channelID ...string,
+) ([]string, error) {
+	query := `
+		SELECT COALESCE(meta->>'channel_name', user_id::text)
 		FROM activities
 		WHERE user_id = $1
 		AND media_type = 'video'
@@ -236,9 +187,25 @@ func (r *ActivityRepository) GetLatestVideoChannelNameByUserIDAndChannelID(
 		LIMIT 1
 	`
 
-	var channelName string
-	err = conn.QueryRow(ctx, query, userID, channelID).Scan(&channelName)
-	return channelName, err
+	batch := &pgx.Batch{}
+	for _, id := range channelID {
+		batch.Queue(query, userID, id)
+	}
+
+	result := r.pool.SendBatch(ctx, batch)
+	defer result.Close()
+
+	channelNames := make([]string, 0, len(channelID))
+	for i := 0; i < len(channelID); i++ {
+		row := result.QueryRow()
+		var channelName string
+		if err := row.Scan(&channelName); err != nil {
+			return nil, err
+		}
+		channelNames = append(channelNames, channelName)
+	}
+
+	return channelNames, nil
 }
 
 func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
@@ -247,7 +214,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
 	start, end time.Time,
 	limit int,
 ) (orderedmap.Map[ChannelStats], error) {
-	const query = `
+	query := `
 		SELECT
 			COALESCE(SUM(duration), 0) AS total_duration,
 			meta->>'channel_id' AS channel_id
@@ -263,16 +230,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
 		ORDER BY total_duration DESC
 		LIMIT $4
 	`
-
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
-	rows, err := conn.Query(ctx, query, userID, start, end, limit)
+	rows, err := r.pool.Query(ctx, query, userID, start, end, limit)
 
 	if err != nil {
 		return nil, err
@@ -281,7 +239,6 @@ func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
 	defer rows.Close()
 
 	channels := orderedmap.New[ChannelStats]()
-
 	for rows.Next() {
 		var channelID string
 		var duration time.Duration
@@ -290,14 +247,21 @@ func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
 			return nil, err
 		}
 
-		channelName, err := r.GetLatestVideoChannelNameByUserIDAndChannelID(ctx, userID, channelID)
-		if err != nil {
-			return nil, err
-		}
-
 		channels.Set(channelID, ChannelStats{
-			ChannelName:   channelName,
 			TotalDuration: duration,
+		})
+	}
+
+	channelNames, err := r.GetLatestYouTubeChannelNamesByUserIDAndChannelID(ctx, userID, channels.Keys()...)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, channelID := range channels.Keys() {
+		v, _ := channels.Get(channelID)
+		channels.Set(channelID, ChannelStats{
+			ChannelName:   channelNames[i],
+			TotalDuration: v.TotalDuration,
 		})
 	}
 
@@ -309,7 +273,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupedByMonth(
 	userID, guildID string,
 	start, end time.Time,
 ) (orderedmap.Map[time.Duration], error) {
-	const query = `
+	query := `
 		SELECT
 			to_char(date_series.month, 'YYYY-MM') AS month,
 			COALESCE(SUM(duration), 0) AS total_duration
@@ -334,15 +298,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupedByMonth(
 		ORDER BY month ASC
 	`
 
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
-	rows, err := conn.Query(ctx, query, userID, guildID, start, end)
+	rows, err := r.pool.Query(ctx, query, userID, guildID, start, end)
 
 	if err != nil {
 		return nil, err
@@ -374,7 +330,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupedByDay(
 	start, end time.Time,
 ) (orderedmap.Map[time.Duration], error) {
 	// day should be truncated to a string `YYYY-MM-DD` in the user's timezone
-	const query = `
+	query := `
 		SELECT
 			to_char(date_series.day, 'YYYY-MM-DD') AS day,
 			COALESCE(SUM(duration), 0) AS total_duration
@@ -399,15 +355,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupedByDay(
 		ORDER BY day ASC
 	`
 
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
-	rows, err := conn.Query(ctx, query, userID, guildID, start, end)
+	rows, err := r.pool.Query(ctx, query, userID, guildID, start, end)
 
 	if err != nil {
 		return nil, err
@@ -432,7 +380,7 @@ func (r *ActivityRepository) GetTotalByUserIDGroupedByDay(
 }
 
 func (r *ActivityRepository) GetLatestByUserID(ctx context.Context, userID, guildID string) (*Activity, error) {
-	const query = `
+	query := `
 		SELECT activities.id,
 			   user_id,
 			   guild_id,
@@ -454,17 +402,8 @@ func (r *ActivityRepository) GetLatestByUserID(ctx context.Context, userID, guil
 		LIMIT 1
 	`
 
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
 	var activity Activity
-
-	err = conn.QueryRow(ctx, query, userID, guildID).Scan(
+	err := r.pool.QueryRow(ctx, query, userID, guildID).Scan(
 		&activity.ID,
 		&activity.UserID,
 		&activity.GuildID,
@@ -478,16 +417,14 @@ func (r *ActivityRepository) GetLatestByUserID(ctx context.Context, userID, guil
 		&activity.ImportedAt,
 		&activity.Meta,
 	)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return &activity, nil
 }
 
 func (r *ActivityRepository) GetByID(ctx context.Context, id uint64, guildID string) (*Activity, error) {
-	const query = `
+	query := `
 		SELECT activities.id,
 			   user_id,
 			   guild_id,
@@ -507,17 +444,8 @@ func (r *ActivityRepository) GetByID(ctx context.Context, id uint64, guildID str
 		AND deleted_at IS NULL
 	`
 
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
 	var activity Activity
-
-	err = conn.QueryRow(ctx, query, id, guildID).Scan(
+	err := r.pool.QueryRow(ctx, query, id, guildID).Scan(
 		&activity.ID,
 		&activity.UserID,
 		&activity.GuildID,
@@ -540,7 +468,7 @@ func (r *ActivityRepository) GetByID(ctx context.Context, id uint64, guildID str
 }
 
 func (r *ActivityRepository) GetAllByUserID(ctx context.Context, userID, guildID string) ([]*Activity, error) {
-	const query = `
+	query := `
 		SELECT activities.id,
 			   user_id,
 			   guild_id,
@@ -560,25 +488,13 @@ func (r *ActivityRepository) GetAllByUserID(ctx context.Context, userID, guildID
 		AND deleted_at IS NULL
 		ORDER BY date DESC
 	`
-
-	conn, err := r.pool.Acquire(ctx)
-
+	rows, err := r.pool.Query(ctx, query, userID, guildID)
 	if err != nil {
 		return nil, err
 	}
-
-	defer conn.Release()
-
-	rows, err := conn.Query(ctx, query, userID, guildID)
-
-	if err != nil {
-		return nil, err
-	}
-
 	defer rows.Close()
 
 	activities := make([]*Activity, 0)
-
 	for rows.Next() {
 		var activity Activity
 		if err := rows.Scan(
@@ -608,7 +524,7 @@ func (r *ActivityRepository) PageByUserID(
 	userID, guildID string,
 	limit, offset int,
 ) (*UserActivityPage, error) {
-	const query = `
+	query := `
 		SELECT activities.id,
 			   user_id,
 			   guild_id,
@@ -633,16 +549,7 @@ func (r *ActivityRepository) PageByUserID(
 		OFFSET $4
 	`
 
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
-	rows, err := conn.Query(ctx, query, userID, guildID, limit, offset)
-
+	rows, err := r.pool.Query(ctx, query, userID, guildID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -678,35 +585,17 @@ func (r *ActivityRepository) PageByUserID(
 }
 
 func (r *ActivityRepository) DeleteByID(ctx context.Context, id uint64) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx, `
+	_, err := r.pool.Exec(ctx, `
 		UPDATE activities
 		SET deleted_at = NOW() AT TIME ZONE 'UTC'
 		WHERE id = $1
 	`, id)
-
 	return err
 }
 
 func (r *ActivityRepository) GetTopMembers(ctx context.Context, guildID string, limit int, start, end time.Time) ([]*MemberStats, error) {
 	members := make([]*MemberStats, 0)
-
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
-	rows, err := conn.Query(ctx, `
+	rows, err := r.pool.Query(ctx, `
 		SELECT m.user_id, COALESCE(SUM(a.duration), 0) AS total_duration
 		FROM guild_members m
 		LEFT JOIN activities a ON m.user_id = a.user_id
@@ -740,15 +629,7 @@ func (r *ActivityRepository) GetTopMembers(ctx context.Context, guildID string, 
 }
 
 func (r *ActivityRepository) GetAvgSpeedByMediaTypeAndUserID(ctx context.Context, mediaType, userID string, start, end time.Time) (float32, error) {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return 0, err
-	}
-
-	defer conn.Release()
-
-	const query = `
+	query := `
 		SELECT COALESCE(AVG((meta->'speed')::numeric), 0)
 		FROM activities
 		WHERE user_id = $1
@@ -760,23 +641,15 @@ func (r *ActivityRepository) GetAvgSpeedByMediaTypeAndUserID(ctx context.Context
 		AND jsonb_typeof(meta->'speed') = 'number'
 	`
 
-	row := conn.QueryRow(ctx, query, userID, mediaType, start, end)
+	row := r.pool.QueryRow(ctx, query, userID, mediaType, start, end)
 
 	var avg float32
-	err = row.Scan(&avg)
+	err := row.Scan(&avg)
 	return avg, err
 }
 
 func (r *ActivityRepository) GetTotalWatchTimeOfVideoByUserID(ctx context.Context, userID, videoPlatform, videoID string) (total time.Duration, err error) {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return
-	}
-
-	defer conn.Release()
-
-	const query = `
+	query := `
 		SELECT COALESCE(SUM(duration), 0)
 		FROM activities
 		WHERE user_id = $1
@@ -786,7 +659,7 @@ func (r *ActivityRepository) GetTotalWatchTimeOfVideoByUserID(ctx context.Contex
 		AND deleted_at IS NULL
 	`
 
-	row := conn.QueryRow(ctx, query, userID, videoPlatform, videoID)
+	row := r.pool.QueryRow(ctx, query, userID, videoPlatform, videoID)
 	err = row.Scan(&total)
 	return
 }

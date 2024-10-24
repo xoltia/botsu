@@ -20,15 +20,7 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 }
 
 func (r *UserRepository) Create(ctx context.Context, user *User) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
-	err = conn.QueryRow(
+	err := r.pool.QueryRow(
 		ctx,
 		`INSERT INTO users (
 			   id,
@@ -63,22 +55,13 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 }
 
 func (r *UserRepository) FindByID(ctx context.Context, id string) (*User, error) {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer conn.Release()
-
 	cached := r.getCachedUser(id)
-
 	if cached != nil {
 		return cached, nil
 	}
 
 	var user User
-	err = conn.QueryRow(ctx,
+	err := r.pool.QueryRow(ctx,
 		`SELECT id,
        		timezone,
        		vn_reading_speed,
@@ -122,21 +105,13 @@ func (r *UserRepository) FindOrCreate(ctx context.Context, id string) (*User, er
 }
 
 func (r *UserRepository) SetVisualNovelReadingSpeed(ctx context.Context, userID string, speed float32) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
 	query := `
 		INSERT INTO users (id, vn_reading_speed)
 		VALUES ($1, $2)
 		ON CONFLICT (id) DO UPDATE SET vn_reading_speed = $2;
 	`
 
-	if _, err = conn.Exec(ctx, query, userID, speed); err != nil {
+	if _, err := r.pool.Exec(ctx, query, userID, speed); err != nil {
 		return err
 	}
 
@@ -148,21 +123,12 @@ func (r *UserRepository) SetVisualNovelReadingSpeed(ctx context.Context, userID 
 }
 
 func (r *UserRepository) SetBookReadingSpeed(ctx context.Context, userID string, speed float32) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
 	query := `
 		INSERT INTO users (id, book_reading_speed)
 		VALUES ($1, $2)
 		ON CONFLICT (id) DO UPDATE SET book_reading_speed = $2;
 	`
-
-	if _, err = conn.Exec(ctx, query, userID, speed); err != nil {
+	if _, err := r.pool.Exec(ctx, query, userID, speed); err != nil {
 		return err
 	}
 
@@ -174,21 +140,13 @@ func (r *UserRepository) SetBookReadingSpeed(ctx context.Context, userID string,
 }
 
 func (r *UserRepository) SetMangaReadingSpeed(ctx context.Context, userID string, speed float32) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
 	query := `
 		INSERT INTO users (id, manga_reading_speed)
 		VALUES ($1, $2)
 		ON CONFLICT (id) DO UPDATE SET manga_reading_speed = $2;
 	`
 
-	if _, err = conn.Exec(ctx, query, userID, speed); err != nil {
+	if _, err := r.pool.Exec(ctx, query, userID, speed); err != nil {
 		return err
 	}
 
@@ -200,20 +158,11 @@ func (r *UserRepository) SetMangaReadingSpeed(ctx context.Context, userID string
 }
 
 func (r *UserRepository) SetUserTimezone(ctx context.Context, userID, timezone string) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
-	_, err = conn.Exec(ctx,
+	_, err := r.pool.Exec(ctx,
 		`INSERT INTO users (id, timezone)
 		VALUES ($1, $2)
 		ON CONFLICT (id) DO UPDATE SET timezone = $2;`,
 		userID, timezone)
-
 	if err != nil {
 		return err
 	}
@@ -228,21 +177,13 @@ func (r *UserRepository) SetUserTimezone(ctx context.Context, userID, timezone s
 }
 
 func (r *UserRepository) SetDailyGoal(ctx context.Context, userID string, goal int) error {
-	conn, err := r.pool.Acquire(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer conn.Release()
-
 	query := `
 		INSERT INTO users (id, daily_goal)
 		VALUES ($1, $2)
 		ON CONFLICT (id) DO UPDATE SET daily_goal = $2;
 	`
 
-	if _, err = conn.Exec(ctx, query, userID, goal); err != nil {
+	if _, err := r.pool.Exec(ctx, query, userID, goal); err != nil {
 		return err
 	}
 
