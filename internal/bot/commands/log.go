@@ -23,6 +23,7 @@ import (
 	"github.com/xoltia/botsu/internal/guilds"
 	"github.com/xoltia/botsu/internal/mediadata"
 	"github.com/xoltia/botsu/internal/users"
+	"github.com/xoltia/botsu/internal/videos"
 	"github.com/xoltia/botsu/pkg/discordutil"
 	"github.com/xoltia/botsu/pkg/ref"
 )
@@ -821,7 +822,7 @@ func (c *LogCommand) handleVideo(ctx *bot.InteractionContext, subcommand *discor
 		return err
 	}
 
-	video, err := activities.GetVideoInfo(ctx.Context(), u, false)
+	video, err := videos.GetVideoInfo(ctx.Context(), u, videos.Options{})
 	if err != nil {
 		return err
 	}

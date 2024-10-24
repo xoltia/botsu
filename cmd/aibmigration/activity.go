@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/videos"
 )
 
 type aibActivity struct {
@@ -70,8 +71,8 @@ func populateVideoMetadata(ctx context.Context, a *activities.Activity, vidURL s
 		return
 	}
 
-	var meta *activities.VideoInfo
-	meta, err = activities.GetVideoInfo(ctx, u, false)
+	var meta *videos.VideoInfo
+	meta, err = videos.GetVideoInfo(ctx, u, videos.Options{})
 
 	if err != nil {
 		return

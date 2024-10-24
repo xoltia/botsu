@@ -6,6 +6,7 @@ import (
 
 	"github.com/adhocore/gronx"
 	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/videos"
 )
 
 type Goal struct {
@@ -35,8 +36,7 @@ func (g *Goal) MatchesActivity(a *activities.Activity) bool {
 		return true
 	}
 
-	meta, ok := a.Meta.(*activities.VideoInfo)
-
+	meta, ok := a.Meta.(*videos.VideoInfo)
 	if !ok {
 		return false
 	}

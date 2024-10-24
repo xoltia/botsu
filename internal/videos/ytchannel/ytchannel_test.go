@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xoltia/botsu/pkg/ytchannel"
+	"github.com/xoltia/botsu/internal/videos/ytchannel"
 )
 
 func TestGetChannelFromHandle(t *testing.T) {

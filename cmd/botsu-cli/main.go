@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/xoltia/botsu/internal/activities"
+	"github.com/xoltia/botsu/internal/videos"
 	"github.com/xoltia/botsu/pkg/ref"
 )
 
@@ -96,7 +97,7 @@ func getActivityFromFlags() (a *activities.Activity, err error) {
 			return nil, err
 		}
 
-		videoData, err := activities.GetVideoInfo(context.Background(), u, false)
+		videoData, err := videos.GetVideoInfo(context.Background(), u, videos.Options{})
 
 		if err != nil {
 			err = fmt.Errorf("failed to get video info: %w", err)

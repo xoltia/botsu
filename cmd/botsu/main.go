@@ -26,6 +26,7 @@ import (
 	"github.com/xoltia/botsu/internal/guilds"
 	"github.com/xoltia/botsu/internal/mediadata"
 	"github.com/xoltia/botsu/internal/users"
+	"github.com/xoltia/botsu/internal/videos"
 	"github.com/xoltia/botsu/migrations"
 )
 
@@ -69,7 +70,7 @@ func main() {
 	logger.Info("Log level set", slog.String("level", config.LogLevel.String()))
 
 	if config.GoogleAPIKey != "" {
-		err = activities.SetupYoutubeAPI(config.GoogleAPIKey)
+		err = videos.EnableYouTubeAPI(config.GoogleAPIKey)
 		if err != nil {
 			logger.Error("Unable to setup YouTube API", slog.String("err", err.Error()))
 			os.Exit(1)
