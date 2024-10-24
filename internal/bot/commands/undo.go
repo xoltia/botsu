@@ -103,13 +103,11 @@ func (c *UndoCommand) undoActivity(ctx *bot.InteractionContext, id uint64) error
 		Components: []discordgo.MessageComponent{row},
 		Flags:      discordgo.MessageFlagsEphemeral,
 	})
-
 	if err != nil {
 		return err
 	}
 
 	msg, err := ctx.Session().InteractionResponse(ctx.Interaction().Interaction)
-
 	if err != nil {
 		return err
 	}
@@ -140,7 +138,6 @@ func (c *UndoCommand) undoActivity(ctx *bot.InteractionContext, id uint64) error
 
 	if ci.MessageComponentData().CustomID == "undo_confirm" {
 		err = c.r.DeleteByID(ciCtx, activity.ID)
-
 		if err != nil {
 			return err
 		}

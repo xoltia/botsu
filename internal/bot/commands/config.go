@@ -91,7 +91,6 @@ func (c *ConfigCommand) Handle(ctx *bot.InteractionContext) error {
 	switch options[0].Name {
 	case "timezone":
 		timezone, err := discordutil.GetRequiredStringOption(options, "timezone")
-
 		if err != nil {
 			return err
 		}
@@ -106,7 +105,6 @@ func (c *ConfigCommand) Handle(ctx *bot.InteractionContext) error {
 		}
 
 		err = c.userRepository.SetUserTimezone(ctx.Context(), discordutil.GetInteractionUser(i).ID, timezone)
-
 		if err != nil {
 			return err
 		}
@@ -114,7 +112,6 @@ func (c *ConfigCommand) Handle(ctx *bot.InteractionContext) error {
 		embedBuilder.SetDescription("Your timezone has been updated.")
 	case "vn-speed":
 		vnSpeed, err := discordutil.GetRequiredFloatOption(options, "vn-speed")
-
 		if err != nil {
 			return err
 		}
@@ -127,13 +124,11 @@ func (c *ConfigCommand) Handle(ctx *bot.InteractionContext) error {
 		embedBuilder.SetDescription("Your visual novel reading speed has been updated.")
 	case "book-speed":
 		bookSpeed, err := discordutil.GetRequiredFloatOption(options, "book-speed")
-
 		if err != nil {
 			return err
 		}
 
 		err = c.userRepository.SetBookReadingSpeed(ctx.Context(), discordutil.GetInteractionUser(i).ID, float32(bookSpeed))
-
 		if err != nil {
 			return err
 		}
@@ -141,13 +136,11 @@ func (c *ConfigCommand) Handle(ctx *bot.InteractionContext) error {
 		embedBuilder.SetDescription("Your book reading speed has been updated.")
 	case "manga-speed":
 		mangaSpeed, err := discordutil.GetRequiredFloatOption(options, "manga-speed")
-
 		if err != nil {
 			return err
 		}
 
 		err = c.userRepository.SetMangaReadingSpeed(ctx.Context(), discordutil.GetInteractionUser(i).ID, float32(mangaSpeed))
-
 		if err != nil {
 			return err
 		}
@@ -155,13 +148,11 @@ func (c *ConfigCommand) Handle(ctx *bot.InteractionContext) error {
 		embedBuilder.SetDescription("Your manga reading speed has been updated.")
 	case "daily-goal":
 		dailyGoal, err := discordutil.GetRequiredUintOption(options, "daily-goal")
-
 		if err != nil {
 			return err
 		}
 
 		err = c.userRepository.SetDailyGoal(ctx.Context(), discordutil.GetInteractionUser(i).ID, int(dailyGoal))
-
 		if err != nil {
 			return err
 		}

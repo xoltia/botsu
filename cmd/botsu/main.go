@@ -145,14 +145,12 @@ func main() {
 		}
 
 		migrationSource, err := iofs.New(migrations.MigrationFS, ".")
-
 		if err != nil {
 			logger.Error("Unable to create migration source", slog.String("err", err.Error()))
 			os.Exit(1)
 		}
 
 		m, err := migrate.NewWithSourceInstance("migrations.MigrationFS", migrationSource, migrationURL.String())
-
 		if err != nil {
 			logger.Error("Unable to create migration", slog.String("err", err.Error()))
 			os.Exit(1)
@@ -160,14 +158,12 @@ func main() {
 
 		err = m.Up()
 		noChange := errors.Is(err, migrate.ErrNoChange)
-
 		if err != nil && !noChange {
 			logger.Error("Unable to run migrations", slog.String("err", err.Error()))
 			os.Exit(1)
 		}
 
 		ver, dirty, err := m.Version()
-
 		if err != nil {
 			logger.Warn("Failed to get database version")
 		}
@@ -186,7 +182,6 @@ func main() {
 	}
 
 	pool, err := pgxpool.New(context.Background(), config.Database.ConnectionString())
-
 	if err != nil {
 		logger.Error("Unable to connect to database", slog.String("err", err.Error()))
 		os.Exit(1)

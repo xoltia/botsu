@@ -250,7 +250,6 @@ func (c *ChartCommand) handleYoutubeChannel(ctx *bot.InteractionContext, user *u
 	}
 
 	resp, err := http.DefaultClient.Do(&req)
-
 	if err != nil {
 		return err
 	}
@@ -313,11 +312,9 @@ func (c *ChartCommand) Handle(ctx *bot.InteractionContext) error {
 		timezone = *user.Timezone
 	} else if guildID != "" {
 		guild, err := c.gr.FindByID(ctx.ResponseContext(), guildID)
-
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
-
 		if guild != nil && guild.Timezone != nil {
 			timezone = *guild.Timezone
 		}
@@ -422,7 +419,6 @@ func (c *ChartCommand) Handle(ctx *bot.InteractionContext) error {
 	}
 
 	reqBody, err := getQuickChartBarBody(dailyDurations.Keys(), values, goal)
-
 	if err != nil {
 		return err
 	}
@@ -437,7 +433,6 @@ func (c *ChartCommand) Handle(ctx *bot.InteractionContext) error {
 	}
 
 	resp, err := http.DefaultClient.Do(&req)
-
 	if err != nil {
 		return err
 	}

@@ -700,7 +700,6 @@ func (c *LogCommand) handleVisualNovel(ctx *bot.InteractionContext, subcommand *
 
 		if v.ImageNSFW && thumbnail != "" {
 			blurredThumbnail, err := blurImageFromURL(ctx.Context(), thumbnail, 30)
-
 			if err != nil {
 				return err
 			}
@@ -1021,7 +1020,6 @@ func (c *LogCommand) createAutocompleteResult(ctx context.Context, mediaType, in
 
 	if mediaType == activities.ActivityMediaTypeAnime {
 		results, err := c.mediaSearcher.SearchAnime(ctx, input, 25)
-
 		if err != nil {
 			return nil, err
 		}
@@ -1052,7 +1050,6 @@ func (c *LogCommand) createAutocompleteResult(ctx context.Context, mediaType, in
 		}
 	} else if mediaType == activities.ActivityMediaTypeVisualNovel {
 		results, err := c.mediaSearcher.SearchVisualNovel(ctx, input, 25)
-
 		if err != nil {
 			return nil, err
 		}
@@ -1098,7 +1095,6 @@ func (c *LogCommand) resolveAnimeFromAutocomplete(input string) (*mediadata.Anim
 	id, field := parts[0], parts[1]
 
 	anime, err := c.mediaSearcher.ReadAnime(context.TODO(), id)
-
 	if err != nil {
 		return nil, "", err
 	}
@@ -1122,7 +1118,6 @@ func (c *LogCommand) resolveVNFromAutocomplete(input string) (*mediadata.VisualN
 	id, field := parts[0], parts[1]
 
 	vn, err := c.mediaSearcher.ReadVisualNovel(context.TODO(), id)
-
 	if err != nil {
 		return nil, "", err
 	}
@@ -1246,27 +1241,22 @@ func isAutocompletedEntry(input string) bool {
 
 func blurImageFromURL(ctx context.Context, url string, radius uint32) (imgFile io.Reader, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-
 	if err != nil {
 		return
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-
 	if err != nil {
 		return
 	}
-
 	defer resp.Body.Close()
 
 	srcImage, _, err := image.Decode(resp.Body)
-
 	if err != nil {
 		return
 	}
 
 	img, err := stackblur.Process(srcImage, radius)
-
 	if err != nil {
 		return
 	}

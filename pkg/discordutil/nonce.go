@@ -23,16 +23,12 @@ func NewNonce() (nonce string, err error) {
 	randomBytes := make([]byte, 8)
 	nonceBytes := make([]byte, 16)
 
-	_, err = rand.Read(randomBytes)
-
-	if err != nil {
+	if _, err = rand.Read(randomBytes); err != nil {
 		return
 	}
-
 	copy(nonceBytes, randomBytes)
 	binary.BigEndian.PutUint64(nonceBytes[8:], uint64(timestamp))
 
 	nonce = hex.EncodeToString(nonceBytes)
-
 	return
 }

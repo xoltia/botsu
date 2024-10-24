@@ -62,7 +62,6 @@ func (c *ExportCommand) Handle(ctx *bot.InteractionContext) error {
 
 	for _, activity := range activities {
 		err = jsonEncoder.Encode(activity)
-
 		if err != nil {
 			return err
 		}

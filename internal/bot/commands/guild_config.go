@@ -52,7 +52,6 @@ func (c *GuildConfigCommand) Handle(ctx *bot.InteractionContext) error {
 	switch options[0].Name {
 	case "timezone":
 		timezone, err := discordutil.GetRequiredStringOption(options, "timezone")
-
 		if err != nil {
 			return err
 		}

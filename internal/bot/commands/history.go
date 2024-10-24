@@ -75,7 +75,6 @@ func (c *HistoryCommand) Handle(ctx *bot.InteractionContext) error {
 	}
 
 	page, err := c.r.PageByUserID(ctx.Context(), user.ID, ctx.Interaction().GuildID, pageSize, offset)
-
 	if err != nil {
 		return err
 	}
@@ -222,7 +221,6 @@ func (c *HistoryCommand) Handle(ctx *bot.InteractionContext) error {
 		}
 
 		page, err = c.r.PageByUserID(ciContext, user.ID, ctx.Interaction().GuildID, pageSize, offset)
-
 		if err != nil {
 			cancel()
 			return err

@@ -66,19 +66,16 @@ func (activity *aibActivity) asNewFormatActivity() (a *activities.Activity) {
 func populateVideoMetadata(ctx context.Context, a *activities.Activity, vidURL string) (err error) {
 	var u *url.URL
 	u, err = url.Parse(vidURL)
-
 	if err != nil {
 		return
 	}
 
 	var meta *videos.VideoInfo
 	meta, err = videos.GetVideoInfo(ctx, u, videos.Options{})
-
 	if err != nil {
 		return
 	}
 
 	a.Meta = meta
-
 	return
 }

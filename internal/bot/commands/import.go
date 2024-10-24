@@ -69,7 +69,6 @@ func (c *ImportCommand) handleList(
 	cmd *bot.InteractionContext,
 ) error {
 	history, err := c.r.GetRecentImportsByUserID(ctx, cmd.User().ID, 10)
-
 	if err != nil {
 		return err
 	}

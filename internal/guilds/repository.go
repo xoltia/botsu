@@ -65,12 +65,10 @@ func (r *GuildRepository) FindOrCreate(ctx context.Context, id string) (*Guild, 
 	}
 
 	guild, err := r.FindByID(ctx, id)
-
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			guild = NewGuild(id)
 			err = r.Create(ctx, guild)
-
 			if err != nil {
 				return nil, err
 			}

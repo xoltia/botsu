@@ -71,11 +71,9 @@ func (r *GoalRepository) FindByUserID(ctx context.Context, userID string) (goals
 		AND user_id = $1`,
 		userID,
 	)
-
 	if err != nil {
 		return
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
@@ -93,7 +91,6 @@ func (r *GoalRepository) FindByUserID(ctx context.Context, userID string) (goals
 			&g.DueAt,
 			&g.CreatedAt,
 		)
-
 		if err != nil {
 			return
 		}
@@ -106,7 +103,6 @@ func (r *GoalRepository) FindByUserID(ctx context.Context, userID string) (goals
 
 func (r *GoalRepository) BeginUpdateTxByUserID(ctx context.Context, userID string) (goals []*Goal, tx pgx.Tx, err error) {
 	tx, err = r.pool.Begin(ctx)
-
 	if err != nil {
 		return
 	}
@@ -120,7 +116,6 @@ func (r *GoalRepository) BeginUpdateTxByUserID(ctx context.Context, userID strin
 		FOR UPDATE`,
 		userID,
 	)
-
 	if err != nil {
 		return
 	}

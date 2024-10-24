@@ -37,21 +37,17 @@ func (s *UserTimeService) GetTimezone(ctx context.Context, userID, guildID strin
 
 func (s *UserTimeService) GetTimeLocation(ctx context.Context, userID, guildID string) (*time.Location, error) {
 	timezone, err := s.GetTimezone(ctx, userID, guildID)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return time.LoadLocation(timezone)
 }
 
 func (s *UserTimeService) GetTime(ctx context.Context, userID, guildID string) (time.Time, error) {
 	location, err := s.GetTimeLocation(ctx, userID, guildID)
-
 	if err != nil {
 		return time.Time{}, err
 	}
-
 	return time.Now().In(location), nil
 }
 

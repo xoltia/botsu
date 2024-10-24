@@ -80,21 +80,17 @@ func GetYoutubeChannel(ctx context.Context, handleOrID string) (ch *Channel, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, profileURL, nil)
-
 	if err != nil {
 		return
 	}
 
 	resp, err := HTTPClient.Do(req)
-
 	if err != nil {
 		return
 	}
-
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-
 	if err != nil {
 		return
 	}

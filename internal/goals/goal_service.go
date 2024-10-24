@@ -19,22 +19,18 @@ func NewGoalService(repo *GoalRepository, ts *users.UserTimeService) *GoalServic
 
 func (s *GoalService) NextCron(ctx context.Context, g *Goal) (t time.Time, err error) {
 	location, err := s.ts.GetTimeLocation(ctx, g.UserID, "")
-
 	if err != nil {
 		return
 	}
-
 	now := time.Now().In(location)
 	return g.NextDueTime(now)
 }
 
 func (s *GoalService) PreviousCron(ctx context.Context, g *Goal) (t time.Time, err error) {
 	location, err := s.ts.GetTimeLocation(ctx, g.UserID, "")
-
 	if err != nil {
 		return
 	}
-
 	now := time.Now().In(location)
 	return g.PreviousDueTime(now)
 }

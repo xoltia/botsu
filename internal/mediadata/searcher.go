@@ -40,13 +40,11 @@ func (rw *batchedReadWriter[T, PT]) read(ctx context.Context, id string) (record
 
 	req := bluge.NewTermQuery(id).SetField("_id")
 	dmi, err := rw.r.Search(ctx, bluge.NewTopNSearch(1, req))
-
 	if err != nil {
 		return
 	}
 
 	next, err := dmi.Next()
-
 	if err != nil {
 		return
 	}
@@ -63,11 +61,9 @@ func (rw *batchedReadWriter[T, PT]) read(ctx context.Context, id string) (record
 		fields[field] = string(value)
 		return true
 	})
-
 	if err != nil {
 		return
 	}
-
 	err = record.Unmarshal(fields)
 	return
 }
@@ -83,7 +79,6 @@ func (rw *batchedReadWriter[T, PT]) search(ctx context.Context, matchQuery strin
 		query := bluge.NewMatchQuery(matchQuery).SetField(field)
 		searchRequest := bluge.NewTopNSearch(limit, query)
 		dmi, err := rw.r.Search(ctx, searchRequest)
-
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +93,6 @@ func (rw *batchedReadWriter[T, PT]) search(ctx context.Context, matchQuery strin
 				fields[field] = string(value)
 				return true
 			})
-
 			if err != nil {
 				break
 			}
@@ -127,7 +121,6 @@ func (rw *batchedReadWriter[T, PT]) overwriteData(data []T) (err error) {
 	defer rw.mu.Unlock()
 
 	w, err := bluge.OpenWriter(rw.config)
-
 	if err != nil {
 		return
 	}
@@ -137,7 +130,6 @@ func (rw *batchedReadWriter[T, PT]) overwriteData(data []T) (err error) {
 	var doc *bluge.Document
 	for _, record := range data {
 		doc, err = record.Marshal()
-
 		if err != nil {
 			return
 		}
@@ -208,7 +200,6 @@ func (s *MediaSearcher) UpdateData(ctx context.Context) (err error) {
 	go func() {
 		s.Logger.Info("Downloaded anime data")
 		animeData, err := DownloadAnime(ctx)
-
 		if err != nil {
 			errs <- fmt.Errorf("unable to download anime data: %w", err)
 			return
@@ -225,7 +216,6 @@ func (s *MediaSearcher) UpdateData(ctx context.Context) (err error) {
 	go func() {
 		s.Logger.Info("Downloaded visual novel data")
 		vnData, err := DownloadVisualNovels(ctx)
-
 		if err != nil {
 			errs <- fmt.Errorf("unable to download visual novel data: %w", err)
 			return

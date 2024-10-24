@@ -197,7 +197,6 @@ func (c *GoalCommand) handleDelete(cmd *bot.InteractionContext, subcommand *disc
 
 func (c *GoalCommand) handleList(cmd *bot.InteractionContext, _ *discordgo.ApplicationCommandInteractionDataOption) error {
 	goals, err := c.goals.CheckAll(cmd.ResponseContext(), cmd.User().ID)
-
 	if err != nil {
 		return fmt.Errorf("failed to find goals: %w", err)
 	}
@@ -222,7 +221,6 @@ func (c *GoalCommand) handleList(cmd *bot.InteractionContext, _ *discordgo.Appli
 
 	for _, goal := range goals {
 		nextDueDate, err := c.goals.NextCron(cmd.Context(), goal)
-
 		if err != nil {
 			return fmt.Errorf("failed to calculate next due date: %w", err)
 		}

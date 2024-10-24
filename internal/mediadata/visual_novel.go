@@ -77,7 +77,6 @@ func (vn *VisualNovel) SearchFields() []string {
 
 func DownloadVisualNovels(ctx context.Context) (vns []VisualNovel, err error) {
 	vndbDataFS, err := otame.DownloadVNDB(ctx)
-
 	if err != nil {
 		err = fmt.Errorf("unable to download VNDB data: %w", err)
 		return
@@ -94,7 +93,6 @@ func DownloadVisualNovels(ctx context.Context) (vns []VisualNovel, err error) {
 	}()
 
 	vnData, err := vndbDataFS.Open("db/vn")
-
 	if err != nil {
 		err = fmt.Errorf("unable to open VNDB data: %w", err)
 		return
@@ -108,7 +106,6 @@ func DownloadVisualNovels(ctx context.Context) (vns []VisualNovel, err error) {
 	for {
 		var vn otame.VNDBVisualNovel
 		vn, err = vndbIter.Next()
-
 		if err != nil {
 			if err == otame.ErrFinished {
 				err = nil
@@ -133,21 +130,17 @@ func DownloadVisualNovels(ctx context.Context) (vns []VisualNovel, err error) {
 	}
 
 	vnTitleData, err := vndbDataFS.Open("db/vn_titles")
-
 	if err != nil {
 		err = fmt.Errorf("unable to open VNDB title data: %w", err)
 		return
 	}
-
 	defer vnTitleData.Close()
 
 	vnTitleIter := otame.NewVNDBTitleDecoder(vnTitleData)
 
 	for {
 		var vnTitle otame.VNDBTitle
-
 		vnTitle, err = vnTitleIter.Next()
-
 		if err != nil {
 			if err == otame.ErrFinished {
 				err = nil
@@ -179,21 +172,16 @@ func DownloadVisualNovels(ctx context.Context) (vns []VisualNovel, err error) {
 	}
 
 	vnImageData, err := vndbDataFS.Open("db/images")
-
 	if err != nil {
 		err = fmt.Errorf("unable to open VNDB image data: %w", err)
 		return
 	}
-
 	defer vnImageData.Close()
 
 	vnImageIter := otame.NewVNDBImageDecoder(vnImageData)
-
 	for {
 		var vnImage otame.VNDBImage
-
 		vnImage, err = vnImageIter.Next()
-
 		if err != nil {
 			if err == otame.ErrFinished {
 				err = nil
@@ -211,7 +199,6 @@ func DownloadVisualNovels(ctx context.Context) (vns []VisualNovel, err error) {
 	}
 
 	vns = make([]VisualNovel, 0, len(vnMap))
-
 	for _, vn := range vnMap {
 		vns = append(vns, vn)
 	}

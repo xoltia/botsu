@@ -73,7 +73,6 @@ func (c *Config) LoadEnv() error {
 
 	if ok {
 		token, err := os.ReadFile(tokenFile)
-
 		if err != nil {
 			return err
 		}
@@ -82,22 +81,18 @@ func (c *Config) LoadEnv() error {
 	}
 
 	token, ok := os.LookupEnv("BOTSU_TOKEN")
-
 	if ok {
 		c.Token = token
 	}
 
 	host, ok := os.LookupEnv("POSTGRES_HOST")
-
 	if ok {
 		c.Database.Host = host
 	}
 
 	port, ok := os.LookupEnv("POSTGRES_PORT")
-
 	if ok {
 		portInt, err := strconv.Atoi(port)
-
 		if err != nil {
 			return err
 		}
@@ -106,10 +101,8 @@ func (c *Config) LoadEnv() error {
 	}
 
 	userFile, ok := os.LookupEnv("POSTGRES_USER_FILE")
-
 	if ok {
 		user, err := os.ReadFile(userFile)
-
 		if err != nil {
 			return err
 		}
@@ -118,10 +111,8 @@ func (c *Config) LoadEnv() error {
 	}
 
 	passwordFile, ok := os.LookupEnv("POSTGRES_PASSWORD_FILE")
-
 	if ok {
 		password, err := os.ReadFile(passwordFile)
-
 		if err != nil {
 			return err
 		}
@@ -130,22 +121,18 @@ func (c *Config) LoadEnv() error {
 	}
 
 	database, ok := os.LookupEnv("POSTGRES_DB")
-
 	if ok {
 		c.Database.Database = database
 	}
 
 	sslMode, ok := os.LookupEnv("POSTGRES_SSL_MODE")
-
 	if ok {
 		c.Database.SSLMode = sslMode
 	}
 
 	connectionString, ok := os.LookupEnv("BOTSU_CONNECTION_STRING")
-
 	if ok {
 		connectionURL, err := url.Parse(connectionString)
-
 		if err != nil {
 			return err
 		}
@@ -154,13 +141,11 @@ func (c *Config) LoadEnv() error {
 	}
 
 	useMembersIntent, ok := os.LookupEnv("BOTSU_USE_MEMBERS_INTENT")
-
 	if ok {
 		c.UseMembersIntent = stringToTruthy(useMembersIntent)
 	}
 
 	logLevel, ok := os.LookupEnv("BOTSU_LOG_LEVEL")
-
 	if ok {
 		if err := c.LogLevel.UnmarshalText([]byte(logLevel)); err != nil {
 			return err
@@ -168,16 +153,13 @@ func (c *Config) LoadEnv() error {
 	}
 
 	noPanic, ok := os.LookupEnv("BOTSU_NO_PANIC")
-
 	if ok {
 		c.NoPanic = stringToTruthy(noPanic)
 	}
 
 	dataUpdateInterval, ok := os.LookupEnv("BOTSU_DATA_UPDATE_INTERVAL")
-
 	if ok {
 		duration, err := time.ParseDuration(dataUpdateInterval)
-
 		if err != nil {
 			return err
 		}

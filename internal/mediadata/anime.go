@@ -88,7 +88,6 @@ func (a *Anime) SearchFields() []string {
 
 func DownloadAnime(ctx context.Context) (anime []Anime, err error) {
 	aodbData, err := otame.DownloadAODB(ctx)
-
 	if err != nil {
 		err = fmt.Errorf("unable to download anime data offline datavase: %w", err)
 		return
@@ -116,7 +115,6 @@ func DownloadAnime(ctx context.Context) (anime []Anime, err error) {
 
 		for _, src := range aodbEntry.Sources {
 			srcURL, err := url.Parse(src)
-
 			if err != nil {
 				err = fmt.Errorf("unable to parse source URL: %w", err)
 				return nil, err
@@ -141,7 +139,6 @@ func DownloadAnime(ctx context.Context) (anime []Anime, err error) {
 	}
 
 	anidbData, err := otame.DownloadAniDB(ctx)
-
 	if err != nil {
 		err = fmt.Errorf("unable to download AniDB: %w", err)
 		return

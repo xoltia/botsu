@@ -77,7 +77,6 @@ func (b *Bot) onInteractionCreate(s *discordgo.Session, i *discordgo.Interaction
 				stack := debug.Stack()
 				ctx.Logger.Error("Panic occurred", slog.Any("panic", r), slog.Any("stack", string(stack)))
 				_, err := ctx.RespondOrFollowup(unexpectedErrorMessage, false)
-
 				if err != nil {
 					ctx.Logger.Error("Failed to send error message", slog.String("err", err.Error()))
 				}
@@ -94,7 +93,6 @@ func (b *Bot) onInteractionCreate(s *discordgo.Session, i *discordgo.Interaction
 
 		if ctx.IsCommand() {
 			_, err = ctx.RespondOrFollowup(unexpectedErrorMessage, false)
-
 			if err != nil {
 				ctx.Logger.Error("Failed to send error message", slog.String("err", err.Error()))
 			}
@@ -182,9 +180,7 @@ func (b *Bot) Close() {
 
 	if b.destroyOnClose {
 		b.logger.Debug("Destroying commands")
-
 		_, err := b.session.ApplicationCommandBulkOverwrite(b.session.State.User.ID, "", []*discordgo.ApplicationCommand{})
-
 		if err != nil {
 			b.logger.Error("Failed to destroy commands", slog.String("err", err.Error()))
 		}

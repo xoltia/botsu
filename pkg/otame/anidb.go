@@ -68,7 +68,6 @@ func (a *AniDBEntryDecoder) Next() (entry AniDBEntry, err error) {
 	var line []string
 
 	line, err = a.readLine()
-
 	if err != nil {
 		return
 	}

@@ -167,13 +167,11 @@ func (d *genericLineDecoder[T]) Next() (entry T, err error) {
 	var line []string
 
 	line, err = d.readLine()
-
 	if err != nil {
 		return
 	}
 
 	entry, err = d.unmarshal(line)
-
 	if err != nil {
 		err = fmt.Errorf("line %d: %w", d.line, err)
 	}

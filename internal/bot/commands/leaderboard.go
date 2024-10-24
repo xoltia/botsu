@@ -132,7 +132,6 @@ func (c *LeaderboardCommand) Handle(ctx *bot.InteractionContext) error {
 			timezone = *user.Timezone
 		} else if guildID != "" {
 			guild, err := c.g.FindByID(ctx.ResponseContext(), guildID)
-
 			if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 				return err
 			}
@@ -184,7 +183,6 @@ func (c *LeaderboardCommand) Handle(ctx *bot.InteractionContext) error {
 
 	// Note: Do not go over 100 members as Discord will not allow fetching 100+ in a single chunk
 	topMembers, err := c.r.GetTopMembers(ctx.Context(), i.GuildID, 10, start, end)
-
 	if err != nil {
 		return err
 	}
@@ -194,14 +192,12 @@ func (c *LeaderboardCommand) Handle(ctx *bot.InteractionContext) error {
 
 	for _, m := range topMembers {
 		guild, err := s.State.Guild(i.GuildID)
-
 		if err != nil {
 			missingMembers = append(missingMembers, m.UserID)
 			continue
 		}
 
 		member, err := s.State.Member(guild.ID, m.UserID)
-
 		if err != nil {
 			missingMembers = append(missingMembers, m.UserID)
 			continue
@@ -212,7 +208,6 @@ func (c *LeaderboardCommand) Handle(ctx *bot.InteractionContext) error {
 
 	if len(missingMembers) > 0 {
 		nonce, err := discordutil.NewNonce()
-
 		if err != nil {
 			return err
 		}
@@ -228,7 +223,6 @@ func (c *LeaderboardCommand) Handle(ctx *bot.InteractionContext) error {
 		defer removeHandler()
 
 		err = s.RequestGuildMembersList(i.GuildID, missingMembers, 0, nonce, false)
-
 		if err != nil {
 			return err
 		}

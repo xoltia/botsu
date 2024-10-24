@@ -231,7 +231,6 @@ func (r *ActivityRepository) GetTotalByUserIDGroupByVideoChannel(
 		LIMIT $4
 	`
 	rows, err := r.pool.Query(ctx, query, userID, start, end, limit)
-
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +298,6 @@ func (r *ActivityRepository) GetTotalByUserIDGroupedByMonth(
 	`
 
 	rows, err := r.pool.Query(ctx, query, userID, guildID, start, end)
-
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +354,6 @@ func (r *ActivityRepository) GetTotalByUserIDGroupedByDay(
 	`
 
 	rows, err := r.pool.Query(ctx, query, userID, guildID, start, end)
-
 	if err != nil {
 		return nil, err
 	}
@@ -459,7 +456,6 @@ func (r *ActivityRepository) GetByID(ctx context.Context, id uint64, guildID str
 		&activity.ImportedAt,
 		&activity.Meta,
 	)
-
 	if err != nil {
 		return nil, err
 	}

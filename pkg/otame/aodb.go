@@ -89,7 +89,6 @@ func (a *AnimeOfflineDatabaseDecoder) locateDataArray() error {
 
 	// expect a '['
 	t, err := a.decoder.Token()
-
 	if err != nil {
 		return err
 	}
@@ -99,6 +98,5 @@ func (a *AnimeOfflineDatabaseDecoder) locateDataArray() error {
 	}
 
 	a.caughtUp = true
-
 	return nil
 }

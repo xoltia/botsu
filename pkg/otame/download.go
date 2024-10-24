@@ -51,19 +51,16 @@ type fsCloser struct {
 // file. The caller is responsible for closing the ReadCloser.
 func DownloadAODB(ctx context.Context) (r io.ReadCloser, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, aodbDownloadURL, nil)
-
 	if err != nil {
 		return
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-
 	if err != nil {
 		return
 	}
 
 	r = resp.Body
-
 	return
 }
 
@@ -83,19 +80,16 @@ func DownloadAniDB(ctx context.Context) (r io.ReadCloser, err error) {
 	}
 
 	req.Header.Set("User-Agent", userAgent)
-
 	if err != nil {
 		return
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-
 	if err != nil {
 		return
 	}
 
 	r, err = gzip.NewReader(resp.Body)
-
 	if err != nil {
 		resp.Body.Close()
 		return
@@ -105,7 +99,6 @@ func DownloadAniDB(ctx context.Context) (r io.ReadCloser, err error) {
 		ReadCloser: r,
 		inner:      resp.Body,
 	}
-
 	return
 }
 
@@ -121,29 +114,23 @@ func DownloadVNDB(ctx context.Context) (*fsCloser, error) {
 // will remove the temporary directory.
 func DownloadVNDBUsingTempDir(ctx context.Context, temp string) (fsc *fsCloser, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, vndbDownloadURL, nil)
-
 	if err != nil {
 		return
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-
 	if err != nil {
 		return
 	}
-
 	defer resp.Body.Close()
 
 	r, err := zstd.NewReader(resp.Body)
-
 	if err != nil {
 		return
 	}
-
 	defer r.Close()
 
 	tempDir, err := os.MkdirTemp(temp, "vndb")
-
 	if err != nil {
 		return
 	}
@@ -157,7 +144,6 @@ func DownloadVNDBUsingTempDir(ctx context.Context, temp string) (fsc *fsCloser, 
 		var header *tar.Header
 
 		header, err = tarReader.Next()
-
 		if err != nil {
 			if err == io.EOF {
 				err = nil
@@ -173,13 +159,11 @@ func DownloadVNDBUsingTempDir(ctx context.Context, temp string) (fsc *fsCloser, 
 			var file *os.File
 
 			file, err = os.Create(path.Join(tempDir, header.Name))
-
 			if err != nil {
 				break
 			}
 
 			_, err = io.Copy(file, tarReader)
-
 			if err != nil {
 				file.Close()
 				break
@@ -200,6 +184,5 @@ func DownloadVNDBUsingTempDir(ctx context.Context, temp string) (fsc *fsCloser, 
 		FS:    os.DirFS(tempDir),
 		Close: func() error { return os.RemoveAll(tempDir) },
 	}
-
 	return
 }
