@@ -94,11 +94,14 @@ func main() {
 		}
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	mediaSearcher := mediadata.NewMediaSearcher("data")
 	mediaSearcher.Logger = logger.WithGroup("searcher")
 
 	if !*skipDataUpdate {
-		if err = mediaSearcher.UpdateData(context.Background()); err != nil {
+		if err = mediaSearcher.UpdateData(ctx); err != nil {
 			logger.Error("Unable to update searcher data", slog.String("err", err.Error()))
 			os.Exit(1)
 		}
@@ -181,7 +184,7 @@ func main() {
 		logger.Info("Skipping migration check")
 	}
 
-	pool, err := pgxpool.New(context.Background(), config.Database.ConnectionString())
+	pool, err := pgxpool.New(ctx, config.Database.ConnectionString())
 	if err != nil {
 		logger.Error("Unable to connect to database", slog.String("err", err.Error()))
 		os.Exit(1)
@@ -196,8 +199,12 @@ func main() {
 	goalRepo := goals.NewGoalRepository(pool)
 	goalService := goals.NewGoalService(goalRepo, timeService)
 
-	bot := bot.NewBot(logger.WithGroup("bot"), guildRepo)
-	bot.SetNoPanic(config.NoPanic)
+	bot := bot.NewBot(ctx, bot.Options{
+		Logger:        logger.WithGroup("bot"),
+		NoPanic:       config.NoPanic,
+		MemberTracker: guildRepo,
+	})
+	// bot.SetNoPanic(config.NoPanic)
 
 	bot.AddCommand(commands.LogCommandData, commands.NewLogCommand(activityRepo, userRepo, guildRepo, mediaSearcher, goalService, timeService))
 	bot.AddCommand(commands.ConfigCommandData, commands.NewConfigCommand(userRepo, activityRepo))

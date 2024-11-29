@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/xoltia/botsu/internal/guilds"
 	"github.com/xoltia/botsu/pkg/discordutil"
 )
 
@@ -15,12 +14,16 @@ var unexpectedErrorMessage = &discordgo.WebhookParams{
 	Content: "An unexpected error occurred!",
 }
 
+type memberTracker interface {
+	RemoveMembers(ctx context.Context, guildID string, memberIDs []string) error
+}
+
 type Bot struct {
 	logger                   *slog.Logger
 	session                  *discordgo.Session
 	createdCommands          []*discordgo.ApplicationCommand
 	commands                 CommandCollection
-	guildRepo                *guilds.GuildRepository
+	guildRepo                memberTracker
 	noPanic                  bool
 	destroyOnClose           bool
 	globalComponentCollector *discordutil.MessageComponentCollector
@@ -30,15 +33,22 @@ type Bot struct {
 	cancelBotContext         context.CancelFunc
 }
 
-func NewBot(logger *slog.Logger, guildRepo *guilds.GuildRepository) *Bot {
+type Options struct {
+	Logger         *slog.Logger
+	MemberTracker  memberTracker
+	NoPanic        bool
+	DestroyOnClose bool
+}
+
+func NewBot(ctx context.Context, opts Options) *Bot {
 	bot := &Bot{
-		logger:    logger,
-		commands:  NewCommandCollection(),
-		guildRepo: guildRepo,
+		logger:         opts.Logger,
+		commands:       make(CommandCollection),
+		guildRepo:      opts.MemberTracker,
+		noPanic:        opts.NoPanic,
+		destroyOnClose: opts.DestroyOnClose,
 	}
-
-	bot.botContext, bot.cancelBotContext = context.WithCancel(context.Background())
-
+	bot.botContext, bot.cancelBotContext = context.WithCancel(ctx)
 	return bot
 }
 
@@ -68,7 +78,6 @@ func (b *Bot) onInteractionCreate(s *discordgo.Session, i *discordgo.Interaction
 		WithGroup("handler")
 
 	ctx := NewInteractionContext(subLogger, b, s, i, b.botContext)
-
 	defer ctx.Cancel()
 
 	if b.noPanic {

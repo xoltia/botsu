@@ -48,15 +48,45 @@ func getInfoFromYouTubeAPI(ctx context.Context, videoURL *url.URL) (v *VideoInfo
 		return
 	}
 
+	snippet := result.Items[0].Snippet
+	contentDetails := result.Items[0].ContentDetails
+	if snippet == nil || contentDetails == nil {
+		err = ErrVideoNotFound
+		return
+	}
+
+	thumbnails := snippet.Thumbnails
+	if thumbnails == nil {
+		err = ErrVideoNotFound
+		return
+	}
+
+	thumbnailURL := ""
+	switch {
+	case snippet.Thumbnails.Maxres != nil:
+		thumbnailURL = snippet.Thumbnails.Maxres.Url
+	case snippet.Thumbnails.High != nil:
+		thumbnailURL = snippet.Thumbnails.High.Url
+	case snippet.Thumbnails.Medium != nil:
+		thumbnailURL = snippet.Thumbnails.Medium.Url
+	case snippet.Thumbnails.Standard != nil:
+		thumbnailURL = snippet.Thumbnails.Standard.Url
+	case snippet.Thumbnails.Default != nil:
+		thumbnailURL = snippet.Thumbnails.Default.Url
+	default:
+		err = ErrVideoNotFound
+		return
+	}
+
 	v = &VideoInfo{
 		URL:         videoURL.String(),
 		Platform:    "youtube",
 		ID:          result.Items[0].Id,
-		Title:       result.Items[0].Snippet.Title,
-		ChannelID:   result.Items[0].Snippet.ChannelId,
-		ChannelName: result.Items[0].Snippet.ChannelTitle,
-		Thumbnail:   result.Items[0].Snippet.Thumbnails.Maxres.Url,
-		Duration:    parseYouTubeAPITime(result.Items[0].ContentDetails.Duration),
+		Title:       snippet.Title,
+		ChannelID:   snippet.ChannelId,
+		ChannelName: snippet.ChannelTitle,
+		Thumbnail:   thumbnailURL,
+		Duration:    parseYouTubeAPITime(contentDetails.Duration),
 		//ChannelHandle: result.Items[0].Snippet.ChannelTitle,
 	}
 	return

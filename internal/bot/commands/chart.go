@@ -261,7 +261,7 @@ func (c *ChartCommand) handleYoutubeChannel(ctx *bot.InteractionContext, user *u
 	}
 
 	description := fmt.Sprintf(
-		"Here are your top channels from <t:%d> to <t:%d> . You logged a total of **%.0f minutes**. Here is a breakdown of your time:",
+		"Here are your top channels from <t:%d> to <t:%d>. You logged a total of **%.0f minutes**. Here is a breakdown of your time:",
 		start.Timestamp(),
 		end.Timestamp(),
 		totalMinutes,
