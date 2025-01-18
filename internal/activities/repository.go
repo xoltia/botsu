@@ -392,7 +392,7 @@ func (r *ActivityRepository) GetLatestByUserID(ctx context.Context, userID, guil
 			   meta
 		FROM activities
 		LEFT JOIN users u ON activities.user_id = u.id
-		LEFT JOIN guilds g ON activities.guild_id = $2
+		LEFT JOIN guilds g ON g.id = $2
 		WHERE activities.user_id = $1
 		AND deleted_at IS NULL
 		ORDER BY date DESC
@@ -436,7 +436,7 @@ func (r *ActivityRepository) GetByID(ctx context.Context, id uint64, guildID str
 			   meta
 		FROM activities
 		LEFT JOIN users u ON activities.user_id = u.id
-		LEFT JOIN guilds g ON activities.guild_id = $2
+		LEFT JOIN guilds g ON g.id = $2
 		WHERE activities.id = $1
 		AND deleted_at IS NULL
 	`
@@ -479,7 +479,7 @@ func (r *ActivityRepository) GetAllByUserID(ctx context.Context, userID, guildID
 			   meta
 		FROM activities
 		LEFT JOIN users u ON activities.user_id = u.id
-		LEFT JOIN guilds g ON activities.guild_id = $2
+		LEFT JOIN guilds g ON g.id = $2
 		WHERE activities.user_id = $1
 		AND deleted_at IS NULL
 		ORDER BY date DESC
@@ -537,7 +537,7 @@ func (r *ActivityRepository) PageByUserID(
 			   CEIL($4::float / $3::float) + 1 AS page
 		FROM activities
 		LEFT JOIN users u ON activities.user_id = u.id
-		LEFT JOIN guilds g ON activities.guild_id = $2
+		LEFT JOIN guilds g ON g.id = $2
 		WHERE activities.user_id = $1
 		AND deleted_at IS NULL
 		ORDER BY date DESC
