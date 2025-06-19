@@ -39,5 +39,11 @@ func getGenericVideoInfo(ctx context.Context, videoURL *url.URL) (v *VideoInfo, 
 		v.ChannelName = info.Uploader
 	}
 
+	if v.Platform == "youtube" {
+		v.LinkedChannels = findRelatedYoutubeChannels(info.Description)
+		v.LinkedVideos = findRelatedYoutubeVideos(info.Description)
+		v.HashTags = findHashTags(info.Description)
+	}
+
 	return
 }

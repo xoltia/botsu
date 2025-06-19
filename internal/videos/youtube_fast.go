@@ -14,11 +14,11 @@ import (
 var ytClient = youtube.Client{}
 var channelCache = sync.Map{}
 
-// video is either youtube.com/watch?v=ID or youtube.com/live/ID (for live streams) or youtu.be/ID
 var (
-	ytVideoLinkRegex = regexp.MustCompile(`(?:youtube\.com/watch\?v=|youtube\.com/live/|youtu\.be/)([a-zA-Z0-9_-]+)`)
-	ytHandleRegex    = regexp.MustCompile(`(^|\s|youtu.*/)@([a-zA-Z0-9_-]+)($|\s)`)
-	hashTagRegex     = regexp.MustCompile(`#([^#\s\x{3000}]+)`)
+	videoRegex   = regexp.MustCompile(`(?:youtube\.com/watch\?v=|youtube\.com/live/|youtu\.be/)([a-zA-Z0-9_-]+)`)
+	handleRegex  = regexp.MustCompile(`(?:^|\s|youtube.com/)(@[a-zA-Z0-9_-]+)(:?$|\s)`)
+	channelRegex = regexp.MustCompile(`(?:^|\s|youtube.com/channel/)(UC[a-zA-Z0-9_-]+)(:?$|\s)`)
+	tagRegex     = regexp.MustCompile(`(?:^|\s)(#[^#\s\x{3000}]+)(?:$|\s)`)
 )
 
 func init() {
@@ -87,36 +87,40 @@ func getInfoFromYouTubeBuiltin(ctx context.Context, videoURL *url.URL) (v *Video
 	}
 
 	v.Thumbnail = highestResThumbnail
-	v.LinkedChannels = findRelatedYoutubeChannels(video)
-	v.LinkedVideos = findRelatedYoutubeVideos(video)
-	v.HashTags = findHashTags(video)
+	v.LinkedChannels = findRelatedYoutubeChannels(video.Description)
+	v.LinkedVideos = findRelatedYoutubeVideos(video.Description)
+	v.HashTags = findHashTags(video.Description)
 
 	return
 }
 
-func findRelatedYoutubeChannels(video *youtube.Video) []string {
+func findRelatedYoutubeChannels(description string) []string {
 	relatedChannels := make([]string, 0)
-	matches := ytHandleRegex.FindAllStringSubmatch(video.Description, -1)
-	for _, match := range matches {
-		relatedChannels = append(relatedChannels, "@"+match[2])
+	handleMatches := handleRegex.FindAllStringSubmatch(description, -1)
+	channelMatches := channelRegex.FindAllStringSubmatch(description, -1)
+	for _, match := range handleMatches {
+		relatedChannels = append(relatedChannels, match[1])
+	}
+	for _, match := range channelMatches {
+		relatedChannels = append(relatedChannels, match[1])
 	}
 	return relatedChannels
 }
 
-func findRelatedYoutubeVideos(video *youtube.Video) []string {
+func findRelatedYoutubeVideos(description string) []string {
 	relatedVideos := make([]string, 0)
-	matches := ytVideoLinkRegex.FindAllStringSubmatch(video.Description, -1)
+	matches := videoRegex.FindAllStringSubmatch(description, -1)
 	for _, match := range matches {
 		relatedVideos = append(relatedVideos, match[1])
 	}
 	return relatedVideos
 }
 
-func findHashTags(video *youtube.Video) []string {
+func findHashTags(description string) []string {
 	hashTags := make([]string, 0)
-	matches := hashTagRegex.FindAllStringSubmatch(video.Description, -1)
+	matches := tagRegex.FindAllStringSubmatch(description, -1)
 	for _, match := range matches {
-		hashTags = append(hashTags, "#"+strings.TrimSpace(match[1]))
+		hashTags = append(hashTags, match[1])
 	}
 	return hashTags
 }

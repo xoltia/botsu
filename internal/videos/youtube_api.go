@@ -27,7 +27,7 @@ func youtubeAPIEnabled() bool {
 
 func getInfoFromYouTubeAPI(ctx context.Context, videoURL *url.URL) (v *VideoInfo, err error) {
 	var result *youtube.VideoListResponse
-	parts := ytVideoLinkRegex.FindStringSubmatch(videoURL.String())
+	parts := videoRegex.FindStringSubmatch(videoURL.String())
 	if len(parts) < 2 {
 		err = errors.New("invalid youtube video URL")
 		return
@@ -87,8 +87,15 @@ func getInfoFromYouTubeAPI(ctx context.Context, videoURL *url.URL) (v *VideoInfo
 		ChannelName: snippet.ChannelTitle,
 		Thumbnail:   thumbnailURL,
 		Duration:    parseYouTubeAPITime(contentDetails.Duration),
-		//ChannelHandle: result.Items[0].Snippet.ChannelTitle,
+		// ChannelHandle: result.Items[0].Snippet.ChannelTitle,
 	}
+
+	v.LinkedChannels = findRelatedYoutubeChannels(snippet.Description)
+	v.LinkedVideos = findRelatedYoutubeVideos(snippet.Description)
+	for _, tag := range snippet.Tags {
+		v.HashTags = append(v.HashTags, "#"+tag)
+	}
+
 	return
 }
 
