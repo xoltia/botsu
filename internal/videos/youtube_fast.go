@@ -16,9 +16,9 @@ var channelCache = sync.Map{}
 
 var (
 	videoRegex   = regexp.MustCompile(`(?:youtube\.com/watch\?v=|youtube\.com/live/|youtu\.be/)([a-zA-Z0-9_-]+)`)
-	handleRegex  = regexp.MustCompile(`(?:^|\s|youtube.com/)(@[a-zA-Z0-9_-]+)(:?$|\s)`)
-	channelRegex = regexp.MustCompile(`(?:^|\s|youtube.com/channel/)(UC[a-zA-Z0-9_-]+)(:?$|\s)`)
-	tagRegex     = regexp.MustCompile(`(?:^|\s)(#[^#\s\x{3000}]+)(?:$|\s)`)
+	handleRegex  = regexp.MustCompile(`(?:^|\s|youtube.com/)(@[\p{L}0-9_-]+)`)
+	channelRegex = regexp.MustCompile(`(?:youtube.com/channel/)(UC[a-zA-Z0-9_-]{21,})`)
+	tagRegex     = regexp.MustCompile(`(?:^|\s)(#[^#\s\x{3000}\x{200B}]+)`)
 )
 
 func init() {
