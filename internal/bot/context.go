@@ -3,7 +3,9 @@ package bot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/xoltia/botsu/pkg/discordutil"
@@ -34,8 +36,14 @@ func NewInteractionContext(
 	i *discordgo.InteractionCreate,
 	ctx context.Context,
 ) *InteractionContext {
+	// Should be about 3 seconds from the time Discord sends the interaction.
 	responseDeadline := discordutil.GetInteractionResponseDeadline(i.Interaction)
+	// Should be about 15 minutes later.
 	interactionDeadline := discordutil.GetInteractionFollowupDeadline(i.Interaction)
+
+	// Add some just in case the time from the interaction timestamp
+	// and the time it is actually reaching the bot are greatly different.
+	responseDeadline = responseDeadline.Add(time.Second * 3)
 
 	interactionDeadlineContext, cancel := context.WithDeadline(ctx, interactionDeadline)
 	responseDeadlineContext, cancel2 := context.WithDeadline(ctx, responseDeadline)
@@ -116,12 +124,16 @@ func (c *InteractionContext) Deferred() bool {
 }
 
 func (c *InteractionContext) DeferResponse() error {
-	return c.Respond(discordgo.InteractionResponseDeferredChannelMessageWithSource, nil)
+	err := c.Respond(discordgo.InteractionResponseDeferredChannelMessageWithSource, nil)
+	if err != nil {
+		return fmt.Errorf("defer response: %w", err)
+	}
+	return nil
 }
 
 func (c *InteractionContext) Respond(responseType discordgo.InteractionResponseType, data *discordgo.InteractionResponseData) error {
 	if !c.CanRespond() {
-		return c.responseCtx.Err()
+		return fmt.Errorf("response context: %w", c.responseCtx.Err())
 	}
 
 	if responseType == discordgo.InteractionResponseDeferredChannelMessageWithSource {
@@ -134,7 +146,7 @@ func (c *InteractionContext) Respond(responseType discordgo.InteractionResponseT
 	}, discordgo.WithContext(c.responseCtx))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("send response: %w", err)
 	}
 
 	c.responseCtxCancel()
@@ -144,10 +156,14 @@ func (c *InteractionContext) Respond(responseType discordgo.InteractionResponseT
 
 func (c *InteractionContext) Followup(response *discordgo.WebhookParams, wait bool) (*discordgo.Message, error) {
 	if c.CanRespond() {
-		return nil, ErrResponseNotSent
+		return nil, fmt.Errorf("followup: %w", ErrResponseNotSent)
 	}
 
-	return c.s.FollowupMessageCreate(c.i.Interaction, wait, response, discordgo.WithContext(c.ctx))
+	msg, err := c.s.FollowupMessageCreate(c.i.Interaction, wait, response, discordgo.WithContext(c.ctx))
+	if err != nil {
+		return nil, fmt.Errorf("followup create message: %w", err)
+	}
+	return msg, nil
 }
 
 func (c *InteractionContext) RespondOrFollowup(params *discordgo.WebhookParams, wait bool) (*discordgo.Message, error) {
@@ -162,16 +178,27 @@ func (c *InteractionContext) RespondOrFollowup(params *discordgo.WebhookParams, 
 		}
 
 		err := c.Respond(discordgo.InteractionResponseChannelMessageWithSource, &data)
-		return nil, err
+		if err != nil {
+			return nil, fmt.Errorf("respond or followup: %w", err)
+		}
+		return nil, nil
 	}
 
-	return c.Followup(params, wait)
+	msg, err := c.Followup(params, wait)
+	if err != nil {
+		return nil, fmt.Errorf("respond or followup: %w", err)
+	}
+	return msg, nil
 }
 
 func (c *InteractionContext) EditResponse(params *discordgo.WebhookEdit) (*discordgo.Message, error) {
 	if c.CanRespond() {
-		return nil, ErrResponseNotSent
+		return nil, fmt.Errorf("edit response: %w", ErrResponseNotSent)
 	}
 
-	return c.s.InteractionResponseEdit(c.i.Interaction, params, discordgo.WithContext(c.ctx))
+	msg, err := c.s.InteractionResponseEdit(c.i.Interaction, params, discordgo.WithContext(c.ctx))
+	if err != nil {
+		return nil, fmt.Errorf("edit response: %w", err)
+	}
+	return msg, nil
 }
