@@ -15,7 +15,7 @@ import (
 	"github.com/klauspost/compress/zstd"
 )
 
-const aodbDownloadURL = "https://raw.githubusercontent.com/manami-project/anime-offline-database/master/anime-offline-database-minified.json"
+const aodbDownloadURL = "https://github.com/manami-project/anime-offline-database/releases/download/latest/anime-offline-database-minified.json"
 const anidbDownloadURL = "https://anidb.net/api/anime-titles.dat.gz"
 const vndbDownloadURL = "https://dl.vndb.org/dump/vndb-db-latest.tar.zst"
 
